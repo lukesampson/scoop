@@ -44,7 +44,7 @@ function install_app($app, $architecture, $global, $suggested, $use_cache = $tru
     $fname = dl_urls $app $version $manifest $architecture $dir $use_cache $check_hash
     unpack_inno $fname $manifest $dir
     pre_install $manifest $architecture
-    run_installer $fname $manifest $architecture $dir $global
+    run_installer $fname $manifest $architecture $dir $global $bucket
     ensure_install_dir_not_in_path $dir $global
     $dir = link_current $dir
     create_shims $manifest $dir $global $architecture
@@ -529,13 +529,18 @@ function unpack_inno($fname, $manifest, $dir) {
     write-host "done."
 }
 
-function run_installer($fname, $manifest, $architecture, $dir, $global) {
+function run_installer($fname, $manifest, $architecture, $dir, $global, $bucket) {
     # MSI or other installer
     $msi = msi $manifest $architecture
     $installer = installer $manifest $architecture
     if($installer.script) {
         write-output "Running installer script..."
         iex $installer.script
+        return
+    }
+
+    if($installer.bucket_file) {
+        install_bucket_prog $fname $dir $installer $global $bucket
         return
     }
 
@@ -620,7 +625,25 @@ function install_prog($fname, $dir, $installer, $global) {
     }
 }
 
-function run_uninstaller($manifest, $architecture, $dir) {
+function install_bucket_prog($fname, $dir, $installer, $global, $bucket) {
+    $bucketdir = $(bucketdir $bucket)
+    $prog = "$bucketdir\$(coalesce $installer.bucket_file "$fname")"
+    if(!(is_in_dir $bucketdir $prog)) {
+        abort "Error in manifest: Installer $prog is outside the bucket directory."
+    }
+    $arg = @(args $installer.args $dir $global)
+
+    if($prog.endswith('.ps1')) {
+        & $prog @arg
+    } else {
+        $installed = run $prog $arg "Running installer..."
+        if(!$installed) {
+            abort "Installation aborted. You might need to run 'scoop uninstall $app' before trying again."
+        }
+    }
+}
+
+function run_uninstaller($manifest, $architecture, $dir, $bucket) {
     $msi = msi $manifest $architecture
     $uninstaller = uninstaller $manifest $architecture
     if($uninstaller.script) {
@@ -645,12 +668,22 @@ function run_uninstaller($manifest, $architecture, $dir) {
             $continue_exit_codes.1605 = 'not installed, skipping'
             $continue_exit_codes.3010 = 'restart required'
         } elseif($uninstaller) {
-            $exe = "$dir\$($uninstaller.file)"
+            if($uninstaller.bucket_file) {
+                $bucketdir = $(bucketdir $bucket)
+                $exe = "$bucketdir\$($uninstaller.bucket_file)"
+                if(!(is_in_dir $bucketdir $exe)) {
+                    warn "Error in manifest: Installer $exe is outside the bucket directory, skipping."
+                    $exe = $null;
+                }
+            } else {
+                $exe = "$dir\$($uninstaller.file)"
+                if(!(is_in_dir $dir $exe)) {
+                    warn "Error in manifest: Installer $exe is outside the app directory, skipping."
+                    $exe = $null;
+                }
+            }
             $arg = args $uninstaller.args
-            if(!(is_in_dir $dir $exe)) {
-                warn "Error in manifest: Installer $exe is outside the app directory, skipping."
-                $exe = $null;
-            } elseif(!(test-path $exe)) {
+            if($exe -and !(test-path $exe)) {
                 warn "Uninstaller $exe is missing, skipping."
                 $exe = $null;
             }

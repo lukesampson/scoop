@@ -23,7 +23,7 @@ function do_uninstall($app, $global) {
     $architecture = $install.architecture
 
     echo "Uninstalling '$app'"
-    run_uninstaller $manifest $architecture $dir
+    run_uninstaller $manifest $architecture $dir $install.bucket
     rm_shims $manifest $global $architecture
 
     # If a junction was used during install, that will have been used

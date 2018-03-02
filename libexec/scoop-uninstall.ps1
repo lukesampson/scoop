@@ -56,7 +56,7 @@ $apps | % {
     $install = install_info $app $version $global
     $architecture = $install.architecture
 
-    run_uninstaller $manifest $architecture $dir
+    run_uninstaller $manifest $architecture $dir $install.bucket
     rm_shims $manifest $global $architecture
     rm_startmenu_shortcuts $manifest $global $architecture
 

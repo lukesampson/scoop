@@ -243,6 +243,9 @@
                 "script": {
                     "type": "string"
                 },
+                "bucket_file": {
+                    "type": "string"
+                },
                 "keep": {
                     "type": "boolean"
                 }
@@ -286,6 +289,9 @@
                     "type": "string"
                 },
                 "script": {
+                    "type": "string"
+                },
+                "bucket_file": {
                     "type": "string"
                 }
             },

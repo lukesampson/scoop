@@ -136,7 +136,7 @@ function update($app, $global, $quiet = $false, $independent, $suggested, $use_c
     $dir = versiondir $app $old_version $global
 
     write-host "Uninstalling '$app' ($old_version)"
-    run_uninstaller $old_manifest $architecture $dir
+    run_uninstaller $old_manifest $architecture $dir $bucket
     rm_shims $old_manifest $global $architecture
     env_rm_path $old_manifest $dir $global
     env_rm $old_manifest $global
