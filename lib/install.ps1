@@ -1,6 +1,7 @@
 . "$psscriptroot/autoupdate.ps1"
 . "$psscriptroot/buckets.ps1"
 
+
 function nightly_version($date, $quiet = $false) {
     $date_str = $date.tostring("yyyyMMdd")
     if (!$quiet) {
@@ -69,6 +70,7 @@ function install_app($app, $architecture, $global, $suggested, $use_cache = $tru
     success "'$app' ($version) was installed successfully!"
 
     show_notes $manifest $dir $original_dir $persist_dir
+    cmd.exe /c "refreshenv"
 }
 
 function locate($app, $bucket) {
@@ -1220,3 +1222,4 @@ function persist_data($manifest, $original_dir, $persist_dir) {
         }
     }
 }
+cmd.exe /c "refreshenv"
