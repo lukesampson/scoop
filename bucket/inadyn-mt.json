@@ -3,17 +3,13 @@
     "homepage": "https://sourceforge.net/projects/inadyn-mt/files/inadyn-mt/",
     "license": "GPL-3.0",
     "version": "02.28.10",
-    "autoupdate": {
-        "extract_dir": "inadyn-mt.v.$version",
-        "url": "https://downloads.sourceforge.net/project/inadyn-mt/inadyn-mt/inadyn-mt.v.$version/inadyn-mt.v.$version.tar.gz"
-    },
+    "url": "https://downloads.sourceforge.net/project/inadyn-mt/inadyn-mt/inadyn-mt.v.02.28.10/inadyn-mt.v.02.28.10.tar.gz",
     "bin": "bin/win32/inadyn-mt.exe",
-    "checkver": "title=\"/inadyn-mt/inadyn-mt\\.v\\.([\\d.]+)",
     "depends": [
         "sudo"
     ],
     "extract_dir": "inadyn-mt.v.02.28.10",
-    "hash": "f69bea12d96b66f9f662a8df0730c60457b24f5fb5308b109936880ebf7be5ca",
+    "hash": "sha1:176d47ceb2ddf854c3401fd0ae858d38245810a1",
     "notes": [
         "To install and run as a service:",
         "> notepad $dir\\bin\\win32\\inadyn-mt.conf",
@@ -50,5 +46,9 @@
     "uninstaller": {
         "script": "sudo \"$dir/bin/win32/inadyn-mt.exe\" -x"
     },
-    "url": "https://downloads.sourceforge.net/project/inadyn-mt/inadyn-mt/inadyn-mt.v.02.28.10/inadyn-mt.v.02.28.10.tar.gz"
+    "checkver": "//sourceforge.net/projects/(?:.*)?/files/(?<path>(?:.*)?/inadyn-mt.v.([\\d.]+).tar.gz)/",
+    "autoupdate": {
+        "extract_dir": "inadyn-mt.v.$version",
+        "url": "https://downloads.sourceforge.net/project/inadyn-mt/inadyn-mt/inadyn-mt.v.$version/inadyn-mt.v.$version.tar.gz"
+    }
 }

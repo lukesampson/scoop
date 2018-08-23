@@ -5,15 +5,32 @@
     "architecture": {
         "64bit": {
             "url": "https://downloads.sourceforge.net/project/mingw-w64/Toolchains%20targetting%20Win64/Personal%20Builds/mingw-builds/8.1.0/threads-posix/seh/x86_64-8.1.0-release-posix-seh-rt_v6-rev0.7z",
-            "hash": "853970527B5DE4A55EC8CA4D3FD732C00AE1C69974CC930C82604396D43E79F8",
+            "hash": "sha1:5aa456654a6ce77249c27888b5d0f856fc011b9c",
             "extract_dir": "mingw64"
         },
         "32bit": {
             "url": "https://downloads.sourceforge.net/project/mingw-w64/Toolchains%20targetting%20Win32/Personal%20Builds/mingw-builds/8.1.0/threads-posix/dwarf/i686-8.1.0-release-posix-dwarf-rt_v6-rev0.7z",
-            "hash": "ADB84B70094C0225DD30187FF995E311D19424B1EB8F60934C60E4903297F946",
+            "hash": "sha1:dd4f34f473e84c79b6b446adb3a5fac7919ba9cb",
             "extract_dir": "mingw32"
         }
     },
     "env_add_path": "bin",
+    "checkver": {
+        "sourceforge": {
+            "project": "mingw-w64",
+            "path": "/Toolchains%20targetting%20Win64/Personal%20Builds/mingw-builds"
+        },
+        "re": "/([\\d.]+)/threads-posix/seh/x86_64-(?:[\\d.]+)-release-posix-seh-(?<rev>.*?).7z/"
+    },
+    "autoupdate": {
+        "architecture": {
+            "64bit": {
+                "url": "https://downloads.sourceforge.net/project/mingw-w64/Toolchains%20targetting%20Win64/Personal%20Builds/mingw-builds/$version/threads-posix/seh/x86_64-$version-release-posix-seh-$matchRev.7z"
+            },
+            "32bit": {
+                "url": "https://downloads.sourceforge.net/project/mingw-w64/Toolchains%20targetting%20Win32/Personal%20Builds/mingw-builds/$version/threads-posix/dwarf/i686-$version-release-posix-dwarf-$matchRev.7z"
+            }
+        }
+    },
     "notes": "The 64bit version is built with Structured Exception Handling (SEH), the 32bit is built with DWARF. Both 64bit and 32bit support Posix threading model"
 }

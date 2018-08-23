@@ -13,5 +13,12 @@
             "extract_dir": "gdb32"
         }
     },
-    "env_add_path": "bin"
+    "env_add_path": "bin",
+    "checkver": {
+        "sourceforge": {
+            "project": "tdm-gcc",
+            "path": "/GDB"
+        },
+        "re": "gdb-([\\d.]+)-tdm"
+    }
 }

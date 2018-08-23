@@ -16,8 +16,10 @@
         "pngcrush.exe"
     ],
     "checkver": {
-        "url": "https://sourceforge.net/projects/pmt/files/pngcrush-executables/",
-        "re": "title=\"([0-9\\.]+)\""
+        "sourceforge": {
+            "project": "pmt",
+            "path": "/pngcrush-executables"
+        }
     },
     "autoupdate": {
         "architecture": {

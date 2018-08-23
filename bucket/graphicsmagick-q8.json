@@ -21,8 +21,10 @@
         ]
     ],
     "checkver": {
-        "url": "https://sourceforge.net/p/graphicsmagick/news/?source=navbar",
-        "re": "GraphicsMagick ([\\d].[\\d].[\\d]+)"
+        "sourceforge": {
+            "project": "graphicsmagick",
+            "path": "/graphicsmagick-binaries"
+        }
     },
     "autoupdate": {
         "architecture": {

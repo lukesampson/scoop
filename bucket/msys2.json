@@ -23,7 +23,9 @@
     "env_add_path": ".",
     "notes": "Please run 'msys2' now for the MSYS2 setup to complete!",
     "checkver": {
-        "url": "https://sourceforge.net/projects/msys2/files/Base/x86_64/",
+        "sourceforge": {
+            "path": "/Base"
+        },
         "re": "/msys2-base-x86_64-(\\d+).tar.xz"
     },
     "autoupdate": {

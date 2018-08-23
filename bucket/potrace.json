@@ -15,7 +15,7 @@
         }
     },
     "bin": "potrace.exe",
-    "checkver": "potrace-([\\d.]+)\\.win64\\.zip",
+    "checkver": "sourceforge",
     "autoupdate": {
         "architecture": {
             "64bit": {

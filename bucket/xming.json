@@ -2,10 +2,30 @@
     "homepage": "http://www.straightrunning.com/XmingNotes/",
     "version": "6.9.0.31",
     "description": "Run X GUI applications on bash subsystem or linux VM, and have them rendered on Windows Desktop. http://www.pcworld.com/article/3055403/windows/windows-10s-bash-shell-can-run-graphical-linux-applications-with-this-trick.html",
-    "url": "https://downloads.sourceforge.net/project/xming/Xming-mesa/6.9.0.31/Xming-mesa-6-9-0-31-setup.exe?r=scoop",
-    "hash": "md5:E580DEBBF6110CFC4D8FCD20BEB541C1",
+    "url": "https://downloads.sourceforge.net/project/xming/Xming-mesa/6.9.0.31/Xming-mesa-6-9-0-31-setup.exe",
+    "hash": "sha1:026442d1502827735fdb203009026b86f4b842f0",
     "innosetup": true,
+    "shortcuts": [
+        [
+            "Xming.exe",
+            "Xming"
+        ],
+        [
+            "XLaunch.exe",
+            "XLaunch"
+        ]
+    ],
     "bin": [
-        "XLaunch.exe"
-    ]
+        "xming.exe",
+        "xkbcomp.exe",
+        "xlaunch.exe"
+    ],
+    "checkver": {
+        "sourceforge": {
+            "path": "/Xming-mesa"
+        }
+    },
+    "autoupdate": {
+        "url": "https://downloads.sourceforge.net/project/xming/Xming-mesa/$version/Xming-mesa-$dashVersion-setup.exe"
+    }
 }

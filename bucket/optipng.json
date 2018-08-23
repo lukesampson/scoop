@@ -6,7 +6,7 @@
     "hash": "sha1:2a1484d27bf63c7a15c3494eea95a2c804f5bdbc",
     "extract_dir": "optipng-0.7.7-win32",
     "bin": "optipng.exe",
-    "checkver": "([\\d.]+)<\\/b><\\/font> \\(stable\\)",
+    "checkver": "//sourceforge.net/projects/(?:.*)?/OptiPNG/optipng-([\\d.]+)/optipng-(?:[\\d.]+)-win32.zip/",
     "autoupdate": {
         "url": "https://downloads.sourceforge.net/project/optipng/OptiPNG/optipng-$version/optipng-$version-win32.zip",
         "extract_dir": "optipng-$version-win32"

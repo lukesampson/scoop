@@ -221,6 +221,25 @@
                         "replace": {
                             "description": "Allows rearrange the regexp matches",
                             "type": "string"
+                        },
+                        "sourceforge": {
+                            "anyOf": [
+                                {
+                                    "format": "regex",
+                                    "type": "string"
+                                },
+                                {
+                                    "additionalProperties": false,
+                                    "properties": {
+                                        "project": {
+                                            "type": "string"
+                                        },
+                                        "path": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "type": "object"

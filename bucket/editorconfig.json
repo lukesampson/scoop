@@ -6,8 +6,9 @@
     "hash": "sha1:7c44b819690baec3de22edc0c9f7eb21dc0a7850",
     "bin": "bin/editorconfig.exe",
     "checkver": {
-        "url": "https://sourceforge.net/projects/editorconfig/files/EditorConfig-C-Core/",
-        "re": "title=\"([\\d.]+)\"\\sclass=\"folder"
+        "sourceforge": {
+            "path": "/EditorConfig-C-Core"
+        }
     },
     "autoupdate": {
         "url": "https://downloads.sourceforge.net/project/editorconfig/EditorConfig-C-Core/$version/binary-Windows/editorconfig-$version-Windows-x86.zip",

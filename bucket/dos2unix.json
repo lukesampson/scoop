@@ -6,11 +6,11 @@
     "architecture": {
         "64bit": {
             "url": "https://downloads.sourceforge.net/project/dos2unix/dos2unix/7.4.0/dos2unix-7.4.0-win64.zip",
-            "hash": "1e3db91000c217c2de84f231615a2cc88dad275d8fa0f6698bbfd5f7d0c50a1b"
+            "hash": "sha1:5ce7ab6bcc7973a82a7ac463afefc2595c480cbb"
         },
         "32bit": {
             "url": "https://downloads.sourceforge.net/project/dos2unix/dos2unix/7.4.0/dos2unix-7.4.0-win32.zip",
-            "hash": "12d9188179b0d5526df9044f0e8d3bc11e80201110fd520f21842e27e4ebd4fe"
+            "hash": "sha1:81ef625219c21de67ba4e6ab5b608d292d32eb74"
         }
     },
     "bin": [
@@ -18,5 +18,16 @@
         "bin\\mac2unix.exe",
         "bin\\unix2dos.exe",
         "bin\\unix2mac.exe"
-    ]
+    ],
+    "checkver": "sourceforge",
+    "autoupdate": {
+        "architecture": {
+            "64bit": {
+                "url": "https://downloads.sourceforge.net/project/dos2unix/dos2unix/$version/dos2unix-$version-win64.zip"
+            },
+            "32bit": {
+                "url": "https://downloads.sourceforge.net/project/dos2unix/dos2unix/$version/dos2unix-$version-win32.zip"
+            }
+        }
+    }
 }

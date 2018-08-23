@@ -13,7 +13,10 @@
             "exiftool"
         ]
     ],
-    "checkver": "exiftool-([\\d.]+).zip",
+    "checkver": {
+        "sourceforge": "exiftool",
+        "re": "//sourceforge.net/projects/exiftool/files/exiftool-([\\d.]+).zip/"
+    },
     "autoupdate": {
         "url": "https://downloads.sourceforge.net/project/exiftool/exiftool-$version.zip"
     }

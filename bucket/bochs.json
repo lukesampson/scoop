@@ -21,10 +21,7 @@
             ]
         }
     },
-    "checkver": {
-        "url": "http://bochs.sourceforge.net/getcurrent.html",
-        "re": "<b>Latest release:<\\/b> Bochs ([\\d.]+)"
-    },
+    "checkver": "sourceforge",
     "autoupdate": {
         "architecture": {
             "64bit": {

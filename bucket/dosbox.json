@@ -3,7 +3,7 @@
     "version": "0.74",
     "license": "GPL-2.0",
     "url": "https://downloads.sourceforge.net/project/dosbox/dosbox/0.74/DOSBox0.74-win32-installer.exe",
-    "hash": "c149cb85f732beb95bf6564d72bdfdd9306f7050edfd9d2cd475420efe3b84fc",
+    "hash": "sha1:b4d671ed3fc1fc36aaf8abc1341d2ddaaafa8f88",
     "installer": {
         "args": [
             "/S",
@@ -15,5 +15,8 @@
         "SDL.dll",
         "SDL_net.dll"
     ],
-    "checkver": "Latest version:\\s+<a[^>]+>([\\d.]+)"
+    "checkver": "sourceforge",
+    "autoupdate": {
+        "url": "https://downloads.sourceforge.net/project/dosbox/dosbox/$version/DOSBox$version-win32-installer.exe"
+    }
 }

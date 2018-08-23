@@ -1,14 +1,14 @@
 {
-    "homepage": "http://astyle.sourceforge.net/",
+    "homepage": "http://sourceforge.net/project/astyle",
     "description": "A Free, Fast, and Small Automatic Formatter for C, C++, C++/CLI, Objective‑C, C#, and Java Source Code",
     "version": "3.1",
     "license": "MIT",
-    "url": [
-        "https://sourceforge.net/projects/astyle/files/astyle/astyle%203.1/AStyle_3.1_windows.zip"
-    ],
-    "hash": [
-        "0759d0a3b3ad768e0f1984b6faf22c5d9d53c2e081d1cfbd1cc7d6e955e995cb"
-    ],
-    "bin": "AStyle\\bin\\AStyle.exe",
-    "checkver": "Artistic Style ([\\d.]+)"
+    "url": "https://downloads.sourceforge.net/project/astyle/astyle/astyle%203.1/AStyle_3.1_windows.zip",
+    "hash": "sha1:5372ca57577f252cb6efdde12f889329786a72a2",
+    "extract_dir": "AStyle",
+    "bin": "bin\\AStyle.exe",
+    "checkver": "//sourceforge.net/projects/(?:.*)?/files/(?<path>(?:.*)?/AStyle_([\\d.]+)_windows.zip)/",
+    "autoupdate": {
+        "url": "https://downloads.sourceforge.net/project/astyle/$matchPath"
+    }
 }

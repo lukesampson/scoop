@@ -1,8 +1,11 @@
 {
     "homepage": "http://innounp.sourceforge.net",
     "version": "0.47",
-    "url": "https://github.com/scoopinstaller/binary-mirror/raw/master/innounp/innounp047.rar",
+    "url": "https://downloads.sourceforge.net/project/innounp/innounp/innounp%200.47/innounp047.rar",
     "hash": "sha1:ba0cebf7e3003847d5ed5811620c54d7576146e7",
     "bin": "innounp.exe",
-    "checkver": "Version\\s+([\\d.]+)\\s*<br>"
+    "checkver": "//sourceforge.net/projects/(?:.*)?/files/(?<path>(?:.*)?/innounp%20([\\d.]+)/innounp(?:[\\d]+).rar)/",
+    "autoupdate": {
+        "url": "https://downloads.sourceforge.net/project/innounp/innounp/innounp%20$version/innounp$cleanVersion.rar"
+    }
 }

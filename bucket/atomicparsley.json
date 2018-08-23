@@ -4,7 +4,12 @@
     "version": "0.9.0",
     "license": "GPL-2.0",
     "url": "https://downloads.sourceforge.net/project/atomicparsley/atomicparsley/AtomicParsley%20v0.9.0/AtomicParsley-win32-0.9.0.zip",
-    "hash": "f363630462ea01d7de948c3e4d231159fa91916d8d7f971a7e8b3bc478dbe846",
+    "hash": "sha1:4cddc997e0372234dff85decb2bfd1a074489404",
     "extract_dir": "AtomicParsley-win32-0.9.0",
-    "bin": "AtomicParsley.exe"
+    "bin": "AtomicParsley.exe",
+    "checkver": "//sourceforge.net/projects/(?:.*)?/files/(?<path>(?:.*)?/AtomicParsley-win32-([\\d.]+).zip)/",
+    "autoupdate": {
+        "url": "https://downloads.sourceforge.net/project/atomicparsley/$matchPath",
+        "extract_dir": "AtomicParsley-win32-$version"
+    }
 }
