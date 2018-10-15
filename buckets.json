@@ -6,5 +6,6 @@
     "php": "https://github.com/nueko/scoop-php.git",
     "nerd-fonts": "https://github.com/matthewjberger/scoop-nerd-fonts.git",
     "nonportable": "https://github.com/oltolm/scoop-nonportable",
-    "java": "https://github.com/se35710/scoop-java"
+    "java": "https://github.com/se35710/scoop-java",
+    "nsis": "https://github.com/NSIS-Dev/scoop-nsis"
 }
