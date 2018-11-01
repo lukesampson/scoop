@@ -119,6 +119,29 @@
             },
             "type": "object"
         },
+        "license": {
+            "anyOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "additionalProperties": false,
+                    "properties": {
+                        "url": {
+                            "format": "uri",
+                            "type": "string"
+                        },
+                        "identifier": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "identifier"
+                    ],
+                    "type": "object"
+                }
+            ]
+        },
         "arrayOfArrayOfStrings": {
             "items": {
                 "items": {
@@ -160,6 +183,9 @@
                                 },
                                 "hash": {
                                     "$ref": "#/definitions/hashExtraction"
+                                },
+                                "shortcuts": {
+                                    "$ref": "#/definitions/shortcutsArray"
                                 }
                             },
                             "type": "object"
@@ -176,6 +202,9 @@
                                 },
                                 "hash": {
                                     "$ref": "#/definitions/hashExtraction"
+                                },
+                                "shortcuts": {
+                                    "$ref": "#/definitions/shortcutsArray"
                                 }
                             },
                             "type": "object"
@@ -195,6 +224,12 @@
                 "url": {
                     "format": "uri",
                     "type": "string"
+                },
+                "shortcuts": {
+                    "$ref": "#/definitions/shortcutsArray"
+                },
+                "license": {
+                    "$ref": "#/definitions/license"
                 }
             },
             "type": "object"
@@ -421,27 +456,7 @@
             "$ref": "#/definitions/installer"
         },
         "license": {
-            "anyOf": [
-                {
-                    "type": "string"
-                },
-                {
-                    "additionalProperties": false,
-                    "properties": {
-                        "url": {
-                            "format": "uri",
-                            "type": "string"
-                        },
-                        "identifier": {
-                            "type": "string"
-                        }
-                    },
-                    "required": [
-                        "identifier"
-                    ],
-                    "type": "object"
-                }
-            ]
+            "$ref": "#/definitions/license"
         },
         "msi": {
             "$ref": "#/definitions/stringOrArrayOfStrings",
