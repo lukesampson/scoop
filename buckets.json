@@ -3,6 +3,7 @@
     "versions": "https://github.com/scoopinstaller/versions",
     "nightlies": "https://github.com/scoopinstaller/nightlies",
     "nirsoft": "https://github.com/kodybrown/scoop-nirsoft",
+    "nirsoft-full": "https://github.com/MCOfficer/scoop-nirsoft",
     "php": "https://github.com/nueko/scoop-php.git",
     "nerd-fonts": "https://github.com/matthewjberger/scoop-nerd-fonts.git",
     "nonportable": "https://github.com/oltolm/scoop-nonportable",
