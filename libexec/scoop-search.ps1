@@ -5,11 +5,8 @@
 # If used with [query], shows app names that match the query.
 # Without [query], shows all the available apps.
 param($query)
-. "$psscriptroot\..\lib\core.ps1"
-. "$psscriptroot\..\lib\buckets.ps1"
-. "$psscriptroot\..\lib\manifest.ps1"
+
 . "$psscriptroot\..\lib\versions.ps1"
-. "$psscriptroot\..\lib\config.ps1"
 
 reset_aliases
 

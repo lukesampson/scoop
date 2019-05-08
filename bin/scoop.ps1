@@ -3,6 +3,9 @@ param($cmd)
 
 set-strictmode -off
 
+. "$psscriptroot\..\lib\help.ps1"
+. "$psscriptroot\..\lib\manifest.ps1"
+. "$psscriptroot\..\lib\getopt.ps1"
 . "$psscriptroot\..\lib\config.ps1"
 . "$psscriptroot\..\lib\core.ps1"
 . "$psscriptroot\..\lib\git.ps1"

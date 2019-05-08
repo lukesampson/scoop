@@ -1,3 +1,6 @@
+. "$psscriptroot\..\lib\core.ps1" | out-null
+. "$psscriptroot\..\lib\help.ps1" | out-null
+. "$psscriptroot\..\lib\config.ps1" | out-null
 . "$psscriptroot\..\libexec\scoop-alias.ps1" | out-null
 
 reset_aliases

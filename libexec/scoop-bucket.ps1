@@ -19,11 +19,6 @@
 #     scoop bucket known
 param($cmd, $name, $repo)
 
-. "$psscriptroot\..\lib\core.ps1"
-. "$psscriptroot\..\lib\buckets.ps1"
-. "$psscriptroot\..\lib\help.ps1"
-. "$psscriptroot\..\lib\git.ps1"
-
 reset_aliases
 
 $usage_add = "usage: scoop bucket add <name> [<repo>]"

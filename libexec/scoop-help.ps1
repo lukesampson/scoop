@@ -2,10 +2,6 @@
 # Summary: Show help for a command
 param($cmd)
 
-. "$psscriptroot\..\lib\core.ps1"
-. "$psscriptroot\..\lib\commands.ps1"
-. "$psscriptroot\..\lib\help.ps1"
-
 reset_aliases
 
 function print_help($cmd) {
@@ -47,4 +43,3 @@ Some useful commands are:"
 }
 
 exit 0
-

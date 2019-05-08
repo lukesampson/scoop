@@ -3,11 +3,6 @@
 # Help: Lists all installed apps, or the apps matching the supplied query.
 param($query)
 
-. "$psscriptroot\..\lib\core.ps1"
-. "$psscriptroot\..\lib\versions.ps1"
-. "$psscriptroot\..\lib\manifest.ps1"
-. "$psscriptroot\..\lib\buckets.ps1"
-
 reset_aliases
 $def_arch = default_architecture
 
