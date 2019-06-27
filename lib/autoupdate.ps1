@@ -274,7 +274,7 @@ function get_hash_for_app([String] $app, $config, [String] $version, [String] $u
         write-host -f darkred "URL $url is not valid"
         return $null
     }
-    $file = fullpath (cache_path $app $version $url)
+    $file = cache_path $app $version $url
     $hash = compute_hash $file 'sha256'
     write-host -f DarkYellow 'Computed hash: ' -NoNewline
     write-host -f Green $hash

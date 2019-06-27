@@ -352,8 +352,12 @@ function url_remote_filename($url) {
 }
 
 function ensure($dir) { if(!(test-path $dir)) { mkdir $dir > $null }; resolve-path $dir }
-function fullpath($path) { # should be ~ rooted
-    $executionContext.sessionState.path.getUnresolvedProviderPathFromPSPath($path)
+function Get-AbsolutePath {
+    param (
+        [String]
+        $Path
+    ) # should be ~ rooted
+    return $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Path)
 }
 function relpath($path) { "$($myinvocation.psscriptroot)\$path" } # relative to calling script
 function friendly_path($path) {
@@ -615,7 +619,6 @@ function search_in_path($target) {
 
 function ensure_in_path($dir, $global) {
     $path = env 'PATH' $global
-    $dir = fullpath $dir
     if($path -notmatch [regex]::escape($dir)) {
         write-output "Adding $(friendly_path $dir) to $(if($global){'global'}else{'your'}) path."
 
@@ -678,8 +681,6 @@ function strip_path($orig_path, $dir) {
 }
 
 function remove_from_path($dir,$global) {
-    $dir = fullpath $dir
-
     # future sessions
     $was_in_path, $newpath = strip_path (env 'path' $global) $dir
     if($was_in_path) {
@@ -936,9 +937,11 @@ Optimize-SecurityProtocol
 
 # Scoop root directory
 $scoopdir = $env:SCOOP, (get_config 'rootPath'), "$env:USERPROFILE\scoop" | Where-Object { -not [String]::IsNullOrEmpty($_) } | Select-Object -First 1
+$scoopdir = Get-AbsolutePath -Path $scoopdir
 
 # Scoop global apps directory
 $globaldir = $env:SCOOP_GLOBAL, (get_config 'globalPath'), "$env:ProgramData\scoop" | Where-Object { -not [String]::IsNullOrEmpty($_) } | Select-Object -first 1
+$globaldir = Get-AbsolutePath -Path $globaldir
 
 # Scoop cache directory
 # Note: Setting the SCOOP_CACHE environment variable to use a shared directory
@@ -946,6 +949,7 @@ $globaldir = $env:SCOOP_GLOBAL, (get_config 'globalPath'), "$env:ProgramData\sco
 #       multiple users write and access cached files at the same time.
 #       Use at your own risk.
 $cachedir = $env:SCOOP_CACHE, (get_config 'cachePath'), "$scoopdir\cache" | Where-Object { -not [String]::IsNullOrEmpty($_) } | Select-Object -first 1
+$cachedir = Get-AbsolutePath -Path $cachedir
 
 # Scoop config file migration
 $configHome = $env:XDG_CONFIG_HOME, "$env:USERPROFILE\.config" | Select-Object -First 1

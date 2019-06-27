@@ -17,7 +17,7 @@ try {
 
 $path = "$($gcm.path)"
 $usershims = "$(resolve-path $(shimdir $false))"
-$globalshims = fullpath (shimdir $true) # don't resolve: may not exist
+$globalshims = shimdir $true
 
 if($path.endswith(".ps1") -and ($path -like "$usershims*" -or $path -like "$globalshims*")) {
     $shimtext = Get-Content $path
