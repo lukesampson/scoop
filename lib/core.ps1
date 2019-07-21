@@ -354,10 +354,15 @@ function url_remote_filename($url) {
 function ensure($dir) { if(!(test-path $dir)) { mkdir $dir > $null }; resolve-path $dir }
 function Get-AbsolutePath {
     param (
+        [Parameter(Mandatory = $true)]
         [String]
         $Path
     ) # should be ~ rooted
     return $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Path)
+}
+function fullpath($path) {
+    Show-DeprecatedWarning $MyInvocation 'Get-AbsolutePath'
+    Get-AbsolutePath -Path $path
 }
 function relpath($path) { "$($myinvocation.psscriptroot)\$path" } # relative to calling script
 function friendly_path($path) {
