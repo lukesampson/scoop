@@ -50,3 +50,7 @@ function git_config {
 function git_reset {
     git_proxy_cmd reset $args
 }
+
+function git_status {
+    git_proxy_cmd status $args
+}

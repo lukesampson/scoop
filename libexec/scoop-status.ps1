@@ -10,25 +10,37 @@
 
 reset_aliases
 
-# check if scoop needs updating
-$currentdir = fullpath $(versiondir 'scoop' 'current')
-$needs_update = $false
-
-if(test-path "$currentdir\.git") {
-    Push-Location $currentdir
+function Test-IsGitRepositoryBehind($location) {
+    Push-Location $location
     git_fetch -q origin
-    $commits = $(git log "HEAD..origin/$(scoop config SCOOP_BRANCH)" --oneline)
-    if($commits) { $needs_update = $true }
+    $is_behind = (git_status) -like '*is behind*' -as [bool]
     Pop-Location
-}
-else {
-    $needs_update = $true
+
+    return $is_behind
 }
 
-if($needs_update) {
+function Test-IsScoopBehind {
+    $currentdir = fullpath (versiondir 'scoop' 'current')
+    if (!(Test-Path "$currentdir\.git") -or (Test-IsGitRepositoryBehind $currentdir)) {
+        return $true
+    }
+
+    foreach ($bucket in Get-LocalBucket) {
+        $loc = Find-BucketDirectory $bucket -Root
+        if (Test-IsGitRepositoryBehind $loc) {
+            return $true
+        }
+    }
+
+    return $false
+}
+
+# check if scoop needs updating
+$needs_update = Test-IsScoopBehind
+if ($needs_update) {
     warn "Scoop is out of date. Run 'scoop update' to get the latest changes."
 }
-else { success "Scoop is up to date."}
+else { success "Scoop is up to date." }
 
 $failed = @()
 $outdated = @()
