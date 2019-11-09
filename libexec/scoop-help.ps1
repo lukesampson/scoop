@@ -13,7 +13,7 @@ function print_help($cmd) {
 
     $usage = usage $file
     $summary = summary $file
-    $help = help $file
+    $help = scoop_help $file
 
     if($usage) { "$usage`n" }
     if($help) { $help }

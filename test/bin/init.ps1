@@ -5,6 +5,12 @@ Install-Module -Repository PSGallery -Scope CurrentUser -Force -Name Pester -Ski
 Install-Module -Repository PSGallery -Scope CurrentUser -Force -Name PSScriptAnalyzer,BuildHelpers
 
 if ($env:CI_WINDOWS -eq $true) {
+    # Do not force maintainers to have this inside environment appveyor config
+    if (-not $env:SCOOP_HELPERS) {
+        $env:SCOOP_HELPERS = 'C:\projects\helpers'
+        [System.Environment]::SetEnvironmentVariable('SCOOP_HELPERS', $env:SCOOP_HELPERS, 'Machine')
+    }
+
     if(!(Test-Path $env:SCOOP_HELPERS)) {
         New-Item -ItemType Directory -Path $env:SCOOP_HELPERS
     }

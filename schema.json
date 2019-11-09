@@ -95,6 +95,12 @@
                 "checkver": {
                     "$ref": "#/definitions/checkver"
                 },
+                "env_add_path": {
+                    "$ref": "#/definitions/stringOrArrayOfStrings"
+                },
+                "env_set": {
+                    "type": "object"
+                },
                 "extract_dir": {
                     "$ref": "#/definitions/stringOrArrayOfStrings"
                 },

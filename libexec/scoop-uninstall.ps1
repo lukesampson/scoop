@@ -56,6 +56,14 @@ if (!$apps) { exit 0 }
     $dir = versiondir $app $version $global
     $persist_dir = persistdir $app $global
 
+    #region Workaround for #2952
+    $processdir = appdir $app $global | Resolve-Path | Select-Object -ExpandProperty Path
+    if (Get-Process | Where-Object { $_.Path -like "$processdir\*" }) {
+        error "Application is still running. Close all instances and try again."
+        continue
+    }
+    #endregion Workaround for #2952
+
     try {
         Test-Path $dir -ErrorAction Stop | Out-Null
     } catch [UnauthorizedAccessException] {

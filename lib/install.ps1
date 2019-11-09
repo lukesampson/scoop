@@ -49,8 +49,8 @@ function install_app($app, $architecture, $global, $suggested, $use_cache = $tru
     create_startmenu_shortcuts $manifest $dir $global $architecture
     install_psmodule $manifest $dir $global
     if($global) { ensure_scoop_in_path $global } # can assume local scoop is in path
-    env_add_path $manifest $dir $global
-    env_set $manifest $dir $global
+    env_add_path $manifest $dir $global $architecture
+    env_set $manifest $dir $global $architecture
 
     # persist data
     persist_data $manifest $original_dir $persist_dir
@@ -203,7 +203,7 @@ function dl_with_cache_aria2($app, $version, $manifest, $architecture, $dir, $co
     $urls = @(url $manifest $architecture)
 
     # aria2 input file
-    $urlstxt = "$cachedir\$app.txt"
+    $urlstxt = Join-Path $cachedir "$app.txt"
     $urlstxt_content = ''
     $has_downloads = $false
 
@@ -539,7 +539,12 @@ function dl_urls($app, $version, $manifest, $bucket, $architecture, $dir, $use_c
         if ($manifest.innosetup) {
             $extract_fn = 'Expand-InnoArchive'
         } elseif($fname -match '\.zip$') {
-            $extract_fn = 'Expand-ZipArchive'
+            # Use 7zip when available (more fast)
+            if (((get_config 7ZIPEXTRACT_USE_EXTERNAL) -and (Test-CommandAvailable 7z)) -or (Test-HelperInstalled -Helper 7zip)) {
+                $extract_fn = 'Expand-7zipArchive'
+            } else {
+                $extract_fn = 'Expand-ZipArchive'
+            }
         } elseif($fname -match '\.msi$') {
             # check manifest doesn't use deprecated install method
             if(msi $manifest $architecture) {
@@ -741,6 +746,7 @@ function install_prog($fname, $dir, $installer, $global) {
 function run_uninstaller($manifest, $architecture, $dir) {
     $msi = msi $manifest $architecture
     $uninstaller = uninstaller $manifest $architecture
+    $version = $manifest.version
     if($uninstaller.script) {
         write-output "Running uninstaller script..."
         Invoke-Expression (@($uninstaller.script) -join "`r`n")
@@ -890,7 +896,7 @@ function unlink_current($versiondir) {
         attrib $currentdir -R /L
 
         # remove the junction
-        & "$env:COMSPEC" /c "rmdir $currentdir"
+        & "$env:COMSPEC" /c "rmdir `"$currentdir`""
         return $currentdir
     }
     return $versiondir
@@ -927,53 +933,45 @@ function find_dir_or_subdir($path, $dir) {
     return [string]::join(';', $fixed), $removed
 }
 
-function env_add_path($manifest, $dir, $global) {
-    $manifest.env_add_path | Where-Object { $_ } | ForEach-Object {
-        $path_dir = join-path $dir $_
+function env_add_path($manifest, $dir, $global, $arch) {
+    $env_add_path = arch_specific 'env_add_path' $manifest $arch
+    $env_add_path | Where-Object { $_ } | ForEach-Object {
+        $path_dir = Join-Path $dir $_
 
-        if(!(is_in_dir $dir $path_dir)) {
+        if (!(is_in_dir $dir $path_dir)) {
             abort "Error in manifest: env_add_path '$_' is outside the app directory."
         }
         add_first_in_path $path_dir $global
     }
 }
 
-function add_first_in_path($dir, $global) {
-
-    # future sessions
-    $null, $currpath = strip_path (env 'path' $global) $dir
-    env 'path' $global "$dir;$currpath"
-
-    # this session
-    $null, $env:PATH = strip_path $env:PATH $dir
-    $env:PATH = "$dir;$env:PATH"
-}
-
-function env_rm_path($manifest, $dir, $global) {
-    # remove from path
-    $manifest.env_add_path | Where-Object { $_ } | ForEach-Object {
-        $path_dir = join-path $dir $_
+function env_rm_path($manifest, $dir, $global, $arch) {
+    $env_add_path = arch_specific 'env_add_path' $manifest $arch
+    $env_add_path | Where-Object { $_ } | ForEach-Object {
+        $path_dir = Join-Path $dir $_
 
         remove_from_path $path_dir $global
     }
 }
 
-function env_set($manifest, $dir, $global) {
-    if($manifest.env_set) {
-        $manifest.env_set | Get-Member -member noteproperty | ForEach-Object {
+function env_set($manifest, $dir, $global, $arch) {
+    $env_set = arch_specific 'env_set' $manifest $arch
+    if ($env_set) {
+        $env_set | Get-Member -Member NoteProperty | ForEach-Object {
             $name = $_.name;
-            $val = format $manifest.env_set.$($_.name) @{ "dir" = $dir }
+            $val = format $env_set.$($_.name) @{ "dir" = $dir }
             env $name $global $val
             Set-Content env:\$name $val
         }
     }
 }
-function env_rm($manifest, $global) {
-    if($manifest.env_set) {
-        $manifest.env_set | Get-Member -member noteproperty | ForEach-Object {
+function env_rm($manifest, $global, $arch) {
+    $env_set = arch_specific 'env_set' $manifest $arch
+    if ($env_set) {
+        $env_set | Get-Member -Member NoteProperty | ForEach-Object {
             $name = $_.name
             env $name $global $null
-            if(test-path env:\$name) { Remove-Item env:\$name }
+            if (Test-Path env:\$name) { Remove-Item env:\$name }
         }
     }
 }
@@ -1140,10 +1138,10 @@ function unlink_persist_data($dir) {
                 # remove read-only attribute on the link
                 attrib -R /L $filepath
                 # remove the junction
-                & "$env:COMSPEC" /c "rmdir /s /q $filepath"
+                & "$env:COMSPEC" /c "rmdir /s /q `"$filepath`""
             } else {
                 # remove the hard link
-                & "$env:COMSPEC" /c "del $filepath"
+                & "$env:COMSPEC" /c "del `"$filepath`""
             }
         }
     }

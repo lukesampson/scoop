@@ -94,9 +94,9 @@ if($status.installed) {
     Write-Output "Installed: No"
 }
 
-$binaries = arch_specific 'bin' $manifest $install.architecture
+$binaries = @(arch_specific 'bin' $manifest $install.architecture)
 if($binaries) {
-    $binary_output = "Binaries:`n  "
+    $binary_output = "Binaries:`n "
     $binaries | ForEach-Object {
         if($_ -is [System.Array]) {
             $binary_output += " $($_[1]).exe"

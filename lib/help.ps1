@@ -6,7 +6,7 @@ function summary($text) {
     $text | Select-String '(?m)^# Summary: ([^\n]*)$' | ForEach-Object { $_.matches[0].groups[1].value }
 }
 
-function help($text) {
+function scoop_help($text) {
     $help_lines = $text | Select-String '(?ms)^# Help:(.(?!^[^#]))*' | ForEach-Object { $_.matches[0].value; }
     $help_lines -replace '(?ms)^#\s?(Help: )?', ''
 }

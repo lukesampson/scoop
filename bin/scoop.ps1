@@ -22,7 +22,7 @@ $commands = commands
 if ('--version' -contains $cmd -or (!$cmd -and '-v' -contains $args)) {
     Push-Location $(versiondir 'scoop' 'current')
     write-host "Current Scoop version:"
-    git_log --oneline HEAD -n 1
+    Invoke-Expression "git --no-pager log --oneline HEAD -n 1"
     write-host ""
     Pop-Location
 
@@ -30,7 +30,7 @@ if ('--version' -contains $cmd -or (!$cmd -and '-v' -contains $args)) {
         Push-Location (Find-BucketDirectory $_ -Root)
         if(test-path '.git') {
             write-host "'$_' bucket:"
-            git_log --oneline HEAD -n 1
+            Invoke-Expression "git --no-pager log --oneline HEAD -n 1"
             write-host ""
         }
         Pop-Location

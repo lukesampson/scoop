@@ -64,10 +64,13 @@ If you've built software that you'd like others to use, Scoop is an alternative 
 
 ## Installation
 
-Run this command from your PowerShell to install scoop to its default location (`C:\Users\<user>\scoop`)
+Run the following command from your PowerShell to install scoop to its default location (`C:\Users\<user>\scoop`)
 
 ```powershell
-iex (new-object net.webclient).downloadstring('https://get.scoop.sh')
+Invoke-Expression (New-Object System.Net.WebClient).DownloadString('https://get.scoop.sh')
+
+# or shorter
+iwr -useb get.scoop.sh | iex
 ```
 
 Once installed, run `scoop help` for instructions.
@@ -76,19 +79,20 @@ The default setup is configured so all user installed programs and Scoop itself 
 Globally installed programs (`--global`) live in `C:\ProgramData\scoop`.
 These settings can be changed through environment variables.
 
-### Install Scoop to a Custom Directory
+### Install Scoop to a Custom Directory by changing `SCOOP`
 
 ```powershell
 $env:SCOOP='D:\Applications\Scoop'
 [Environment]::SetEnvironmentVariable('SCOOP', $env:SCOOP, 'User')
-iex (new-object net.webclient).downloadstring('https://get.scoop.sh')
+# run the installer
 ```
 
-### Configure Scoop to install global programs to a Custom Directory
+### Configure Scoop to install global programs to a Custom Directory by changing `SCOOP_GLOBAL`
 
 ```powershell
 $env:SCOOP_GLOBAL='F:\GlobalScoopApps'
 [Environment]::SetEnvironmentVariable('SCOOP_GLOBAL', $env:SCOOP_GLOBAL, 'Machine')
+# run the installer
 ```
 
 ## [Documentation](https://github.com/lukesampson/scoop/wiki)
@@ -146,11 +150,11 @@ The following buckets are known to scoop:
 
 The main bucket is installed by default. To add any of the other buckets, type:
 ```
-> scoop bucket add bucketname
+scoop bucket add bucketname
 ```
 For example, to add the extras bucket, type:
 ```
-> scoop bucket add extras
+scoop bucket add extras
 ```
 
 ## Other application buckets

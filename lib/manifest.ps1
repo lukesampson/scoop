@@ -59,7 +59,7 @@ function install_info($app, $version, $global) {
 }
 
 function default_architecture {
-    if([intptr]::size -eq 8) { return "64bit" }
+    if ([Environment]::Is64BitOperatingSystem) { return "64bit" }
     "32bit"
 }
 

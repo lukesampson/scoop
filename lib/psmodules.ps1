@@ -23,10 +23,10 @@ function install_psmodule($manifest, $dir, $global) {
 
     if(test-path $linkfrom) {
         warn "$(friendly_path $linkfrom) already exists. It will be replaced."
-        & "$env:COMSPEC" /c "rmdir $linkfrom"
+        & "$env:COMSPEC" /c "rmdir `"$linkfrom`""
     }
 
-    & "$env:COMSPEC" /c "mklink /j $linkfrom $dir" | out-null
+    & "$env:COMSPEC" /c "mklink /j `"$linkfrom`" `"$dir`"" | out-null
 }
 
 function uninstall_psmodule($manifest, $dir, $global) {
@@ -40,7 +40,7 @@ function uninstall_psmodule($manifest, $dir, $global) {
     if(test-path $linkfrom) {
         write-host "Removing $(friendly_path $linkfrom)"
         $linkfrom = resolve-path $linkfrom
-        & "$env:COMSPEC" /c "rmdir $linkfrom"
+        & "$env:COMSPEC" /c "rmdir `"$linkfrom`""
     }
 }
 

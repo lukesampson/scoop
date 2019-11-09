@@ -72,8 +72,8 @@ if (is_scoop_outdated) {
 }
 
 if ($apps.length -eq 1) {
-    $app, $null, $null = parse_app $apps
-    if (is_installed $app $global) {
+    $app, $null, $version = parse_app $apps
+    if ($null -eq $version -and (is_installed $app $global)) {
         return
     }
 }

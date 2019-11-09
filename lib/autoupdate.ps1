@@ -58,7 +58,7 @@ function find_hash_in_textfile([String] $url, [Hashtable] $substitutions, [Strin
     $regex = substitute $regex $substitutions $true
     debug $regex
     if ($hashfile -match $regex) {
-        $hash = $matches[1] -replace ' ',''
+        $hash = $matches[1] -replace '\s',''
     }
 
     # convert base64 encoded hash values
@@ -172,7 +172,7 @@ function get_hash_for_app([String] $app, $config, [String] $version, [String] $u
     $hash = $null
 
     $hashmode = $config.mode
-    $basename = url_remote_filename($url)
+    $basename = [System.Web.HttpUtility]::UrlDecode((url_remote_filename($url)))
 
     $substitutions = $substitutions.Clone()
     $substitutions.Add('$url', (strip_fragment $url))
