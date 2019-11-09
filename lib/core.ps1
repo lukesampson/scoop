@@ -362,7 +362,7 @@ function Get-AbsolutePath {
 }
 function fullpath($path) {
     Show-DeprecatedWarning $MyInvocation 'Get-AbsolutePath'
-    Get-AbsolutePath -Path $path
+    return Get-AbsolutePath -Path $path
 }
 function relpath($path) { "$($myinvocation.psscriptroot)\$path" } # relative to calling script
 function friendly_path($path) {
