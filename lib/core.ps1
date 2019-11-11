@@ -351,15 +351,32 @@ function url_remote_filename($url) {
     return $basename
 }
 
-function ensure($dir) { if(!(test-path $dir)) { mkdir $dir > $null }; resolve-path $dir }
+function ensure($dir) { if (!(test-path $dir)) { mkdir $dir > $null }; resolve-path $dir }
+
 function Get-AbsolutePath {
-    param (
-        [Parameter(Mandatory = $true)]
+    <#
+        .SYNOPSIS
+            Get absolute path
+        .DESCRIPTION
+            Get absolute path, even if not existed
+        .PARAMETER Path
+            Path to manipulate
+        .OUTPUTS
+            System.String
+                Absolute path, may or maynot existed
+    #>
+    [CmdletBinding()]
+    [OutputType([String])]
+    Param (
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [String]
         $Path
-    ) # should be ~ rooted
-    return $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Path)
+    )
+    Process {
+        return $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Path)
+    }
 }
+
 function fullpath($path) {
     Show-DeprecatedWarning $MyInvocation 'Get-AbsolutePath'
     return Get-AbsolutePath -Path $path
