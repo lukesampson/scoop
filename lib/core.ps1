@@ -355,24 +355,24 @@ function ensure($dir) { if (!(test-path $dir)) { mkdir $dir > $null }; resolve-p
 
 function Get-AbsolutePath {
     <#
-        .SYNOPSIS
-            Get absolute path
-        .DESCRIPTION
-            Get absolute path, even if not existed
-        .PARAMETER Path
-            Path to manipulate
-        .OUTPUTS
-            System.String
-                Absolute path, may or maynot existed
+    .SYNOPSIS
+        Get absolute path
+    .DESCRIPTION
+        Get absolute path, even if not existed
+    .PARAMETER Path
+        Path to manipulate
+    .OUTPUTS
+        System.String
+            Absolute path, may or maynot existed
     #>
     [CmdletBinding()]
     [OutputType([String])]
-    Param (
+    param (
         [Parameter(Mandatory = $true, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [String]
         $Path
     )
-    Process {
+    process {
         return $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Path)
     }
 }
