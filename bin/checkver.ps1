@@ -75,6 +75,11 @@ param(
 $Dir = Resolve-Path $Dir
 $Search = $App
 
+# don't use $Version with $App = '*'
+if ($App -eq '*' -and $Version -ne '') {
+    throw "Don't use '-Version' with '-App *'!"
+}
+
 # get apps to check
 $Queue = @()
 $json = ''
@@ -194,86 +199,88 @@ while ($in_progress -gt 0) {
     $reverse = $state.reverse
     $replace = $state.replace
     $expected_ver = $json.version
-    $ver = ''
-
-    $err = $ev.SourceEventArgs.Error
-    $page = $ev.SourceEventArgs.Result
-
-    if ($err) {
-        next "$($err.message)`r`nURL $url is not valid"
-        continue
-    }
-
-    if (!$regex -and $replace) {
-        next "'replace' requires 're' or 'regex'"
-        continue
-    }
-
-    if ($jsonpath) {
-        $ver = json_path $page $jsonpath
-        if (!$ver) {
-            $ver = json_path_legacy $page $jsonpath
-        }
-        if (!$ver) {
-            next "couldn't find '$jsonpath' in $url"
-            continue
-        }
-    }
-
-    if ($xpath) {
-        $xml = [xml]$page
-        # Find all `significant namespace declarations` from the XML file
-        $nsList = $xml.SelectNodes("//namespace::*[not(. = ../../namespace::*)]")
-        # Then add them into the NamespaceManager
-        $nsmgr = New-Object System.Xml.XmlNamespaceManager($xml.NameTable)
-        $nsList | ForEach-Object {
-            $nsmgr.AddNamespace($_.LocalName, $_.Value)
-        }
-        # Getting version from XML, using XPath
-        $ver = $xml.SelectSingleNode($xpath, $nsmgr).'#text'
-        if (!$ver) {
-            next "couldn't find '$xpath' in $url"
-            continue
-        }
-    }
-
-    if ($jsonpath -and $regexp) {
-        $page = $ver
-        $ver = ''
-    }
-
-    if ($xpath -and $regexp) {
-        $page = $ver
-        $ver = ''
-    }
-
-    if ($regexp) {
-        $regex = New-Object System.Text.RegularExpressions.Regex($regexp)
-        if ($reverse) {
-            $match = $regex.Matches($page) | Select-Object -Last 1
-        } else {
-            $match = $regex.Matches($page) | Select-Object -First 1
-        }
-
-        if ($match -and $match.Success) {
-            $matchesHashtable = @{}
-            $regex.GetGroupNames() | ForEach-Object { $matchesHashtable.Add($_, $match.Groups[$_].Value) }
-            $ver = $matchesHashtable['1']
-            if ($replace) {
-                $ver = $regex.Replace($match.Value, $replace)
-            }
-            if (!$ver) {
-                $ver = $matchesHashtable['version']
-            }
-        } else {
-            next "couldn't match '$regexp' in $url"
-            continue
-        }
-    }
+    $ver = $Version
 
     if (!$ver) {
-        next "couldn't find new version in $url"
-        continue
+        $err = $ev.SourceEventArgs.Error
+        $page = $ev.SourceEventArgs.Result
+
+        if ($err) {
+            next "$($err.message)`r`nURL $url is not valid"
+            continue
+        }
+
+        if (!$regex -and $replace) {
+            next "'replace' requires 're' or 'regex'"
+            continue
+        }
+
+        if ($jsonpath) {
+            $ver = json_path $page $jsonpath
+            if (!$ver) {
+                $ver = json_path_legacy $page $jsonpath
+            }
+            if (!$ver) {
+                next "couldn't find '$jsonpath' in $url"
+                continue
+            }
+        }
+
+        if ($xpath) {
+            $xml = [xml]$page
+            # Find all `significant namespace declarations` from the XML file
+            $nsList = $xml.SelectNodes("//namespace::*[not(. = ../../namespace::*)]")
+            # Then add them into the NamespaceManager
+            $nsmgr = New-Object System.Xml.XmlNamespaceManager($xml.NameTable)
+            $nsList | ForEach-Object {
+                $nsmgr.AddNamespace($_.LocalName, $_.Value)
+            }
+            # Getting version from XML, using XPath
+            $ver = $xml.SelectSingleNode($xpath, $nsmgr).'#text'
+            if (!$ver) {
+                next "couldn't find '$xpath' in $url"
+                continue
+            }
+        }
+
+        if ($jsonpath -and $regexp) {
+            $page = $ver
+            $ver = ''
+        }
+
+        if ($xpath -and $regexp) {
+            $page = $ver
+            $ver = ''
+        }
+
+        if ($regexp) {
+            $regex = New-Object System.Text.RegularExpressions.Regex($regexp)
+            if ($reverse) {
+                $match = $regex.Matches($page) | Select-Object -Last 1
+            } else {
+                $match = $regex.Matches($page) | Select-Object -First 1
+            }
+
+            if ($match -and $match.Success) {
+                $matchesHashtable = @{}
+                $regex.GetGroupNames() | ForEach-Object { $matchesHashtable.Add($_, $match.Groups[$_].Value) }
+                $ver = $matchesHashtable['1']
+                if ($replace) {
+                    $ver = $regex.Replace($match.Value, $replace)
+                }
+                if (!$ver) {
+                    $ver = $matchesHashtable['version']
+                }
+            } else {
+                next "couldn't match '$regexp' in $url"
+                continue
+            }
+        }
+
+        if (!$ver) {
+            next "couldn't find new version in $url"
+            continue
+        }
     }
 
     # Skip actual only if versions are same and there is no -f
@@ -305,9 +312,6 @@ while ($in_progress -gt 0) {
             Write-Host 'Forcing autoupdate!' -ForegroundColor DarkMagenta
         }
         try {
-            if ($Version -ne "") {
-                $ver = $Version
-            }
             autoupdate $App $Dir $json $ver $matchesHashtable
         } catch {
             error $_.Exception.Message
