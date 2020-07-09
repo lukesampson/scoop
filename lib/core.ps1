@@ -518,6 +518,35 @@ function movedir($from, $to) {
     }
 }
 
+function rm_file($path) {
+    try {
+        Remove-Item $path -ErrorAction Stop
+    }
+    catch {
+        if (Test-Path -Path $path -PathType Leaf) {
+            # Move to temp
+            $tempPath = "$env:TEMP\" + [System.IO.Path]::GetFileNameWithoutExtension($path) + $(Get-Date -Format FileDateTimeUniversal)
+            Move-Item -Path $path -Destination $tempPath
+
+            # Try to delay delete the item
+            $fullPath = (Resolve-Path $tempPath).Path
+            if (!$script:win32API) {
+                $def = @'
+                [DllImport("kernel32.dll", SetLastError=true, CharSet=CharSet.Auto)]
+                public static extern bool MoveFileEx(string lpExistingFileName, string lpNewFileName,
+                                                     int dwFlags);
+'@
+                $script:win32API = Add-Type -MemberDefinition $def -Name MoveFileUtils -PassThru
+            }
+
+            $MOVEFILE_DELAY_UNTIL_REBOOT = 0x00000004
+            $script:win32API::MoveFileEx($fullPath, $null, $MOVEFILE_DELAY_UNTIL_REBOOT)
+        } else {
+            throw $_.Exception
+        }
+    }
+}
+
 function get_app_name($path) {
     if ($path -match '([^/\\]+)[/\\]current[/\\]') {
         return $matches[1].tolower()
@@ -578,7 +607,16 @@ function shim($path, $global, $name, $arg) {
 
     if($path -match '\.(exe|com)$') {
         # for programs with no awareness of any shell
-        Copy-Item "$(versiondir 'scoop' 'current')\supporting\shimexe\bin\shim.exe" "$shim.exe" -force
+        if (Test-Path -Path "$shim.exe") {
+            rm_file "$shim.exe"
+        }
+
+        try {
+            New-Item -Type HardLink -Path "$shim.exe" -Target "$(versiondir 'scoop' 'current')\supporting\shimexe\bin\shim.exe" -ErrorAction Stop | Out-Null
+        } catch {
+            Copy-Item "$(versiondir 'scoop' 'current')\supporting\shimexe\bin\shim.exe" "$shim.exe" -force
+        }
+
         write-output "path = $resolved_path" | out-file "$shim.shim" -encoding utf8
         if($arg) {
             write-output "args = $arg" | out-file "$shim.shim" -encoding utf8 -append
