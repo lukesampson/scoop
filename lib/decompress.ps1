@@ -65,11 +65,14 @@ function Expand-7zipArchive {
         $7zPath = Get-HelperPath -Helper 7zip
     }
     $LogPath = "$(Split-Path $Path)\7zip.log"
-    $ArgList = @('x', "`"$Path`"", "-o`"$DestinationPath`"", '-y')
     $IsTar = ((strip_ext $Path) -match '\.tar$') -or ($Path -match '\.t[abgpx]z2?$')
+    $ArgList = @('x', "`"$Path`"", '-y')
     if (!$IsTar -and $ExtractDir) {
+        $OriDestinationPath = $DestinationPath
+        $DestinationPath = "$DestinationPath\_tmp"
         $ArgList += "-ir!`"$ExtractDir\*`""
     }
+    $ArgList += "-o`"$DestinationPath`""
     if ($Switches) {
         $ArgList += (-split $Switches)
     }
@@ -83,7 +86,8 @@ function Expand-7zipArchive {
         abort "Failed to extract files from $Path.`nLog file:`n  $(friendly_path $LogPath)`n$(new_issue_msg $app $bucket 'decompress error')"
     }
     if (!$IsTar -and $ExtractDir) {
-        movedir "$DestinationPath\$ExtractDir" $DestinationPath | Out-Null
+        movedir "$DestinationPath\$ExtractDir" $OriDestinationPath | Out-Null
+        Remove-Item $DestinationPath -Recurse -Force
     }
     if (Test-Path $LogPath) {
         Remove-Item $LogPath -Force
