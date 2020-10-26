@@ -50,7 +50,7 @@ if (!$apps) { exit 0 }
 :app_loop foreach ($_ in $apps) {
     ($app, $global) = $_
 
-    $version = current_version $app $global
+    $version = Select-CurrentVersion -AppName $app -Global:$global
     Write-Host "Uninstalling '$app' ($version)."
 
     $dir = versiondir $app $version $global
@@ -101,7 +101,7 @@ if (!$apps) { exit 0 }
     }
 
     # remove older versions
-    $old = @(versions $app $global)
+    $old = Get-InstalledVersion -AppName $app -Global:$global
     foreach ($oldver in $old) {
         Write-Host "Removing older version ($oldver)."
         $dir = versiondir $app $oldver $global
@@ -115,7 +115,7 @@ if (!$apps) { exit 0 }
         }
     }
 
-    if (@(versions $app $global).length -eq 0) {
+    if ((Get-InstalledVersion -AppName $app -Global:$global).length -eq 0) {
         $appdir = appdir $app $global
         try {
             # if last install failed, the directory seems to be locked and this

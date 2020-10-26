@@ -34,7 +34,7 @@ $errors = $false
 
 # Uninstall given app
 function do_uninstall($app, $global) {
-    $version = current_version $app $global
+    $version = Select-CurrentVersion -AppName $app -Global:$global
     $dir = versiondir $app $version $global
     $manifest = installed_manifest $app $version $global
     $install = install_info $app $version $global

@@ -37,7 +37,7 @@ function is_installed($app, $global) {
     if (installed $app $global) {
         function gf($g) { if ($g) { ' --global' } }
 
-        $version = @(versions $app $global)[-1]
+        $version = Select-CurrentVersion -AppName $app -Global:$global
         if (!(install_info $app $version $global)) {
             error "It looks like a previous installation of $app failed.`nRun 'scoop uninstall $app$(gf $global)' before retrying the install."
         }
@@ -114,7 +114,7 @@ $apps, $skip = prune_installed $apps $global
 
 $skip | Where-Object { $explicit_apps -contains $_ } | ForEach-Object {
     $app, $null, $null = parse_app $_
-    $version = @(versions $app $global)[-1]
+    $version = Select-CurrentVersion -AppName $app -Global:$global
     warn "'$app' ($version) is already installed. Skipping."
 }
 
