@@ -518,6 +518,45 @@ function movedir($from, $to) {
     }
 }
 
+function Confirm-IsEmptyDirectory {
+    param (
+        [String]
+        $Path
+    )
+    return @(Get-ChildItem -Path $Path -File -Recurse -Force -ErrorAction SilentlyContinue).Length -eq 0
+}
+
+function Remove-Directory {
+    [CmdletBinding(SupportsShouldProcess = $true)]
+    param (
+        [Parameter(Mandatory = $true, Position = 0, ValueFromPipeline = $true)]
+        [String]
+        $Path,
+        [Switch]
+        $OnlyEmpty
+    )
+    if (Test-Path $Path) {
+        if ($OnlyEmpty) {
+            (Get-ChildItem $Path -Directory -Recurse -Force -ErrorAction SilentlyContinue).FullName | ForEach-Object {
+                if (Confirm-IsEmptyDirectory -Path $_) {
+                    Remove-Directory -Path $_
+                }
+            }
+            if (Confirm-IsEmptyDirectory -Path $Path) {
+                Remove-Directory -Path $Path
+            }
+        } else {
+            try {
+                Remove-Item $Path -Recurse -Force -ErrorAction Stop
+            } catch [System.IO.PathTooLongException] {
+                & "$env:COMSPEC" /c "rmdir /s /q $Path"
+            } catch [System.UnauthorizedAccessException] {
+                warn "Couldn't remove '$Path': unauthorized access."
+            }
+        }
+    }
+}
+
 function get_app_name($path) {
     if ($path -match '([^/\\]+)[/\\]current[/\\]') {
         return $matches[1].tolower()

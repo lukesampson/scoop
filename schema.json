@@ -110,10 +110,6 @@
                 "installer": {
                     "$ref": "#/definitions/installer"
                 },
-                "msi": {
-                    "$ref": "#/definitions/stringOrArrayOfStrings",
-                    "description": "Deprecated"
-                },
                 "post_install": {
                     "$ref": "#/definitions/stringOrArrayOfStrings"
                 },
@@ -271,26 +267,50 @@
             ]
         },
         "installer": {
-            "additionalProperties": false,
-            "properties": {
-                "_comment": {
-                    "description": "Undocumented: only used in scoop-extras/oraclejdk* and scoop-extras/appengine-go",
-                    "type": "string"
+            "anyOf": [
+                {
+                    "enum": [
+                        "inno",
+                        "nsis",
+                        "wix"
+                    ]
                 },
-                "args": {
-                    "$ref": "#/definitions/stringOrArrayOfStrings"
-                },
-                "file": {
-                    "type": "string"
-                },
-                "script": {
-                    "$ref": "#/definitions/stringOrArrayOfStrings"
-                },
-                "keep": {
-                    "type": "boolean"
+                {
+                    "additionalProperties": false,
+                    "properties": {
+                        "_comment": {
+                            "description": "Undocumented: only used in scoop-extras/oraclejdk* and scoop-extras/appengine-go",
+                            "type": "string"
+                        },
+                        "args": {
+                            "$ref": "#/definitions/stringOrArrayOfStrings"
+                        },
+                        "file": {
+                            "type": "string"
+                        },
+                        "script": {
+                            "$ref": "#/definitions/stringOrArrayOfStrings"
+                        },
+                        "keep": {
+                            "type": "boolean"
+                        },
+                        "type": {
+                            "enum": [
+                                "inno",
+                                "nsis",
+                                "wix"
+                            ]
+                        },
+                        "include": {
+                            "$ref": "#/definitions/stringOrArrayOfStrings"
+                        },
+                        "exclude": {
+                            "$ref": "#/definitions/stringOrArrayOfStrings"
+                        }
+                    },
+                    "type": "object"
                 }
-            },
-            "type": "object"
+            ]
         },
         "stringOrArrayOfStrings": {
             "anyOf": [
@@ -459,7 +479,7 @@
             "type": "string"
         },
         "innosetup": {
-            "description": "True if the installer InnoSetup based. Found in https://github.com/lukesampson/scoop/search?l=JSON&q=innosetup",
+            "description": "Deprecated. Use 'installer.type.inno' instead.",
             "type": "boolean"
         },
         "installer": {
@@ -487,10 +507,6 @@
                     "type": "object"
                 }
             ]
-        },
-        "msi": {
-            "$ref": "#/definitions/stringOrArrayOfStrings",
-            "description": "Deprecated"
         },
         "notes": {
             "$ref": "#/definitions/stringOrArrayOfStrings"

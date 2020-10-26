@@ -34,6 +34,24 @@ function install_app($app, $architecture, $global, $suggested, $use_cache = $tru
         return
     }
 
+    # Change 'innosetup' to 'installer.type:inno'
+    if ($manifest.innosetup) {
+        warn '"innosetup" is deprecated, please use "installer.type:inno" instead.'
+        warn 'If you maintain this manifest, please refer to the manifest reference docs.'
+        if ($manifest.$architecture.installer) {
+            $manifest.$architecture.installer | Add-Member -MemberType NoteProperty -Name type -Value 'inno'
+        } elseif ($manifest.installer) {
+            $manifest.installer | Add-Member -MemberType NoteProperty -Name type -Value 'inno'
+        } else {
+            $manifest | Add-Member -MemberType NoteProperty -Name installer -Value @{ type = 'inno' }
+        }
+    }
+
+    # Change 'installer:xxx' to 'installer.type:xxx'
+    if ($manifest.installer -is [String]) {
+        $manifest.installer = @{ type = $manifest.installer }
+    }
+
     write-output "Installing '$app' ($version) [$architecture]"
 
     $dir = ensure (versiondir $app $version $global)
@@ -41,8 +59,9 @@ function install_app($app, $architecture, $global, $suggested, $use_cache = $tru
     $persist_dir = persistdir $app $global
 
     $fname = dl_urls $app $version $manifest $bucket $architecture $dir $use_cache $check_hash
+    Invoke-Extraction -FileName $fname -Manifest $manifest -Architecture $architecture -DestinationPath $dir
     pre_install $manifest $architecture
-    run_installer $fname $manifest $architecture $dir $global
+    Invoke-InstallerScript -AppName $app -FileName $fname -Manifest $manifest -Architecture $architecture -DestinationPath $dir -Global:$global
     ensure_install_dir_not_in_path $dir $global
     $dir = link_current $dir
     create_shims $manifest $dir $global $architecture
@@ -524,20 +543,12 @@ function dl_urls($app, $version, $manifest, $bucket, $architecture, $dir, $use_c
     # we only want to show this warning once
     if(!$use_cache) { warn "Cache is being ignored." }
 
-    # can be multiple urls: if there are, then msi or installer should go last,
+    # can be multiple urls: if there are, then installer should go first,
     # so that $fname is set properly
     $urls = @(url $manifest $architecture)
 
     # can be multiple cookies: they will be used for all HTTP requests.
     $cookies = $manifest.cookie
-
-    $fname = $null
-
-    # extract_dir and extract_to in manifest are like queues: for each url that
-    # needs to be extracted, will get the next dir from the queue
-    $extract_dirs = @(extract_dir $manifest $architecture)
-    $extract_tos = @(extract_to $manifest $architecture)
-    $extracted = 0;
 
     # download first
     if(Test-Aria2Enabled) {
@@ -572,45 +583,65 @@ function dl_urls($app, $version, $manifest, $bucket, $architecture, $dir, $use_c
         }
     }
 
-    foreach($url in $urls) {
-        $fname = url_filename $url
+    return $urls | ForEach-Object { url_filename $_ }
+}
 
-        $extract_dir = $extract_dirs[$extracted]
-        $extract_to = $extract_tos[$extracted]
+function Invoke-Extraction {
+    [CmdletBinding()]
+    param (
+        [String[]]
+        $FileName,
+        [PSObject]
+        $Manifest,
+        [String]
+        $Architecture,
+        [String]
+        $DestinationPath
+    )
 
-        # work out extraction method, if applicable
-        $extract_fn = $null
-        if ($manifest.innosetup) {
-            $extract_fn = 'Expand-InnoArchive'
-        } elseif($fname -match '\.zip$') {
-            # Use 7zip when available (more fast)
-            if (((get_config 7ZIPEXTRACT_USE_EXTERNAL) -and (Test-CommandAvailable 7z)) -or (Test-HelperInstalled -Helper 7zip)) {
-                $extract_fn = 'Expand-7zipArchive'
-            } else {
-                $extract_fn = 'Expand-ZipArchive'
-            }
-        } elseif($fname -match '\.msi$') {
-            # check manifest doesn't use deprecated install method
-            if(msi $manifest $architecture) {
-                warn "MSI install is deprecated. If you maintain this manifest, please refer to the manifest reference docs."
-            } else {
-                $extract_fn = 'Expand-MsiArchive'
-            }
-        } elseif(Test-7zipRequirement -File $fname) { # 7zip
-            $extract_fn = 'Expand-7zipArchive'
+    # 'url', 'extract_dir' and 'extract_to' are paired
+    $uris = @(url $Manifest $Architecture)
+    $extractDirs = @(extract_dir $Manifest $Architecture)
+    $extractTos = @(extract_to $Manifest $Architecture)
+    $installer = installer $Manifest $Architecture
+
+    for ($i = 0; $i -lt $uris.Length; $i++) {
+        $args = @{
+            Path = "$DestinationPath\$($FileName[$i])"
+            DestinationPath = "$DestinationPath\$($extractTos[$i])"
         }
-
-        if($extract_fn) {
+        # work out extraction method, if applicable
+        $extractFn = $null
+        if ($i -eq 0 -and $installer.type) {
+            switch ($installer.type) {
+                'inno' { $extractFn = 'Expand-InnoInstaller'; $args.ExtractDir = $extractDirs[$i]; $args.Include = $installer.include; $args.Exclude = $installer.exclude }
+                'nsis' { $extractFn = 'Expand-NsisInstaller'; $args.Architecture = $Architecture }
+                'wix' { $extractFn = 'Expand-WixInstaller'; $args.Exclude = $installer.exclude }
+                Default { abort "Error in manifest: installer type $_ is not supported." }
+            }
+        } else {
+            switch -Regex ($args.Path) {
+                '.*\.zip$' {
+                    if (((get_config 7ZIPEXTRACT_USE_EXTERNAL) -and (Test-CommandAvailable 7z)) -or (Test-HelperInstalled -Helper 7zip)) {
+                        $extractFn = 'Expand-7zipArchive'
+                    } else {
+                        $extractFn = 'Expand-ZipArchive'
+                    }
+                }
+                '.*\.msi$' { $extractFn = 'Expand-MsiArchive' }
+                { Test-7zipRequirement -File $_ } { $extractFn = 'Expand-7zipArchive' }
+            }
+            $args.ExtractDir = $extractDirs[$i]
+        }
+        debug $args
+        if ($extractFn) {
             Write-Host "Extracting " -NoNewline
-            Write-Host $fname -f Cyan -NoNewline
+            Write-Host $(url_remote_filename $uris[$i]) -ForegroundColor Cyan -NoNewline
             Write-Host " ... " -NoNewline
-            & $extract_fn -Path "$dir\$fname" -DestinationPath "$dir\$extract_to" -ExtractDir $extract_dir -Removal
-            Write-Host "done." -f Green
-            $extracted++
+            & $extractFn @Args -Removal
+            Write-Host "done." -ForegroundColor Green
         }
     }
-
-    $fname # returns the last downloaded file
 }
 
 function cookie_header($cookies) {
@@ -710,88 +741,58 @@ function args($config, $dir, $global) {
     @()
 }
 
-function run_installer($fname, $manifest, $architecture, $dir, $global) {
-    # MSI or other installer
-    $msi = msi $manifest $architecture
-    $installer = installer $manifest $architecture
-    if($installer.script) {
-        write-output "Running installer script..."
+function Invoke-InstallerScript {
+    [CmdletBinding()]
+    param (
+        [String]
+        $AppName,
+        [String[]]
+        $FileName,
+        [PSObject]
+        $Manifest,
+        [String]
+        $Architecture,
+        [String]
+        $DestinationPath,
+        [Switch]
+        $Global
+    )
+    $installer = installer $Manifest $Architecture
+
+    if ($installer.file -or $installer.args) {
+        # Installer filename is either explicit defined ('installer.file') or file name in the first URL
+         $progName = "$DestinationPath\$(coalesce $installer.file $FileName[0])"
+        if(!(is_in_dir $DestinationPath $progName)) {
+            abort "Error in manifest: Installer $progName is outside the app directory."
+        }
+        $args = @(args $installer.args $DestinationPath $Global)
+
+        if($progName.EndsWith('.ps1')) {
+            & $progName @Args
+        } else {
+            $isInstalled = Invoke-ExternalCommand $progName $args -Activity "Running installer..."
+            if(!$isInstalled) {
+                abort "Installation aborted. You might need to run 'scoop uninstall $AppName' before trying again."
+            }
+
+            # Don't remove installer if "keep" flag is set to true
+            if($installer.keep -ne 'true') {
+                Remove-Item $progName
+            }
+        }
+    }
+
+    if ($installer.script) {
+        Write-Host 'Running installer script...' -NoNewline
         Invoke-Expression (@($installer.script) -join "`r`n")
-        return
+        Write-Host 'done.' -ForegroundColor Green
     }
 
-    if($msi) {
-        install_msi $fname $dir $msi
-    } elseif($installer) {
-        install_prog $fname $dir $installer $global
-    }
-}
+    return
 
-# deprecated (see also msi_installed)
-function install_msi($fname, $dir, $msi) {
-    $msifile = "$dir\$(coalesce $msi.file "$fname")"
-    if(!(is_in_dir $dir $msifile)) {
-        abort "Error in manifest: MSI file $msifile is outside the app directory."
-    }
-    if(!($msi.code)) { abort "Error in manifest: Couldn't find MSI code."}
-    if(msi_installed $msi.code) { abort "The MSI package is already installed on this system." }
-
-    $logfile = "$dir\install.log"
-
-    $arg = @("/i `"$msifile`"", '/norestart', "/lvp `"$logfile`"", "TARGETDIR=`"$dir`"",
-        "INSTALLDIR=`"$dir`"") + @(args $msi.args $dir)
-
-    if($msi.silent) { $arg += '/qn', 'ALLUSERS=2', 'MSIINSTALLPERUSER=1' }
-    else { $arg += '/qb-!' }
-
-    $continue_exit_codes = @{ 3010 = "a restart is required to complete installation" }
-
-    $installed = Invoke-ExternalCommand 'msiexec' $arg -Activity "Running installer..." -ContinueExitCodes $continue_exit_codes
-    if(!$installed) {
-        abort "Installation aborted. You might need to run 'scoop uninstall $app' before trying again."
-    }
-    Remove-Item $logfile
-    Remove-Item $msifile
-}
-
-# deprecated
-# get-wmiobject win32_product is slow and checks integrity of each installed program,
-# so this uses the [wmi] type accelerator instead
-# http://blogs.technet.com/b/heyscriptingguy/archive/2011/12/14/use-powershell-to-find-and-uninstall-software.aspx
-function msi_installed($code) {
-    $path = "hklm:\software\microsoft\windows\currentversion\uninstall\$code"
-    if(!(test-path $path)) { return $false }
-    $key = Get-Item $path
-    $name = $key.getvalue('displayname')
-    $version = $key.getvalue('displayversion')
-    $classkey = "IdentifyingNumber=`"$code`",Name=`"$name`",Version=`"$version`""
-    try { $wmi = [wmi]"Win32_Product.$classkey"; $true } catch { $false }
-}
-
-function install_prog($fname, $dir, $installer, $global) {
-    $prog = "$dir\$(coalesce $installer.file "$fname")"
-    if(!(is_in_dir $dir $prog)) {
-        abort "Error in manifest: Installer $prog is outside the app directory."
-    }
-    $arg = @(args $installer.args $dir $global)
-
-    if($prog.endswith('.ps1')) {
-        & $prog @arg
-    } else {
-        $installed = Invoke-ExternalCommand $prog $arg -Activity "Running installer..."
-        if(!$installed) {
-            abort "Installation aborted. You might need to run 'scoop uninstall $app' before trying again."
-        }
-
-        # Don't remove installer if "keep" flag is set to true
-        if(!($installer.keep -eq "true")) {
-            Remove-Item $prog
-        }
-    }
 }
 
 function run_uninstaller($manifest, $architecture, $dir) {
-    $msi = msi $manifest $architecture
     $uninstaller = uninstaller $manifest $architecture
     $version = $manifest.version
     if($uninstaller.script) {
@@ -800,31 +801,15 @@ function run_uninstaller($manifest, $architecture, $dir) {
         return
     }
 
-    if($msi -or $uninstaller) {
-        $exe = $null; $arg = $null; $continue_exit_codes = @{}
-
-        if($msi) {
-            $code = $msi.code
-            $exe = "msiexec";
-            $arg = @("/norestart", "/x $code")
-            if($msi.silent) {
-                $arg += '/qn', 'ALLUSERS=2', 'MSIINSTALLPERUSER=1'
-            } else {
-                $arg += '/qb-!'
-            }
-
-            $continue_exit_codes.1605 = 'not installed, skipping'
-            $continue_exit_codes.3010 = 'restart required'
-        } elseif($uninstaller) {
-            $exe = "$dir\$($uninstaller.file)"
-            $arg = args $uninstaller.args
-            if(!(is_in_dir $dir $exe)) {
-                warn "Error in manifest: Installer $exe is outside the app directory, skipping."
-                $exe = $null;
-            } elseif(!(test-path $exe)) {
-                warn "Uninstaller $exe is missing, skipping."
-                $exe = $null;
-            }
+    if($uninstaller) {
+        $exe = "$dir\$($uninstaller.file)"
+        $arg = args $uninstaller.args
+        if(!(is_in_dir $dir $exe)) {
+            warn "Error in manifest: Installer $exe is outside the app directory, skipping."
+            $exe = $null;
+        } elseif(!(test-path $exe)) {
+            warn "Uninstaller $exe is missing, skipping."
+            $exe = $null;
         }
 
         if($exe) {
