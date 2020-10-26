@@ -90,6 +90,9 @@ Get-Event | ForEach-Object {
     Remove-Event $_.SourceIdentifier
 }
 
+$LastModifiedFile = "$cachedir\lastmodified.json"
+$GitHubToken = $env:SCOOP_CHECKVER_TOKEN, (get_config 'checkverToken') | Where-Object { -not [String]::IsNullOrEmpty($_) } | Select-Object -First 1
+
 # start all downloads
 $Queue | ForEach-Object {
     $name, $json = $_
@@ -115,16 +118,29 @@ $Queue | ForEach-Object {
     $xpath = ''
     $replace = ''
 
+    if(!(Test-Path $LastModifiedFile)) {
+        @{} | ConvertTo-Json | Set-Content $LastModifiedFile
+    }
+    $modified = Get-Content $LastModifiedFile | ConvertFrom-Json
+    if($modified.$app) {
+        $wc.Headers.Add('If-Modified-Since', $modified.$app)
+    }
+    if($GitHubToken) {
+        $wc.Headers.Add('Authorization', "token $GitHubToken")
+    }
+
     if ($json.checkver -eq 'github') {
         if (!$json.homepage.StartsWith('https://github.com/')) {
             error "$name checkver expects the homepage to be a github repository"
         }
         $url = $json.homepage + '/releases/latest'
+        $url = $url -replace 'https://github.com/','https://api.github.com/repos/'
         $regex = $githubRegex
     }
 
     if ($json.checkver.github) {
         $url = $json.checkver.github + '/releases/latest'
+        $url = $url -replace 'https://github.com/','https://api.github.com/repos/'
         $regex = $githubRegex
     }
 
@@ -202,7 +218,27 @@ while ($in_progress -gt 0) {
         $page = $json.checkver.script -join "`r`n" | Invoke-Expression
     }
 
+    if($ev.Sender.ResponseHeaders -contains 'Last-Modified') {
+        $lastModified = $ev.Sender.ResponseHeaders['Last-Modified']
+        $modified = Get-Content $LastModifiedFile | ConvertFrom-Json
+        if($null -ne $modified.$app) {
+            $modified.$app = $lastModified
+        } else {
+            $modified | Add-Member -MemberType NoteProperty -Name $app -Value $lastModified
+        }
+        $modified | ConvertTo-Json | Set-Content $LastModifiedFile
+    }
+
     if ($err) {
+        if($err.Response.Headers -contains 'X-RateLimit-Limit' -and $err.Response.StatusCode -eq [System.Net.HttpStatusCode]::Forbidden) {
+            debug $err.Response.Headers['X-RateLimit-Limit']
+            debug $err.Response.Headers['X-RateLimit-Remaining']
+            debug $err.Response.Headers['X-RateLimit-Reset']
+        }
+        if($err.Response.StatusCode -eq [System.Net.HttpStatusCode]::NotModified) {
+            next "not modified"
+            continue
+        }
         next "$($err.message)`r`nURL $url is not valid"
         continue
     }
