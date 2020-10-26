@@ -43,6 +43,9 @@ function install_app($app, $architecture, $global, $suggested, $use_cache = $tru
     $fname = dl_urls $app $version $manifest $bucket $architecture $dir $use_cache $check_hash
     pre_install $manifest $architecture
     run_installer $fname $manifest $architecture $dir $global
+    persist_data $manifest $original_dir $persist_dir
+    persist_permission $manifest $global
+    post_install $manifest $architecture
     ensure_install_dir_not_in_path $dir $global
     $dir = link_current $dir
     create_shims $manifest $dir $global $architecture
@@ -52,11 +55,6 @@ function install_app($app, $architecture, $global, $suggested, $use_cache = $tru
     env_add_path $manifest $dir $global $architecture
     env_set $manifest $dir $global $architecture
 
-    # persist data
-    persist_data $manifest $original_dir $persist_dir
-    persist_permission $manifest $global
-
-    post_install $manifest $architecture
 
     # save info for uninstall
     save_installed_manifest $app $bucket $dir $url
