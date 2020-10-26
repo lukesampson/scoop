@@ -115,7 +115,7 @@ foreach ($current in $MANIFESTS) {
 
         dl_with_cache $current.app $version $_ $null $null -use_cache:$UseCache
 
-        $to_check = fullpath (cache_path $current.app $version $_)
+        $to_check = cache_path $current.app $version $_
         $actual_hash = compute_hash $to_check $algorithm
 
         # Append type of algorithm to both expected and actual if it's not sha256
@@ -140,7 +140,7 @@ foreach ($current in $MANIFESTS) {
         Write-Host "$($current.app): " -NoNewline
         Write-Host 'Mismatch found ' -ForegroundColor Red
         $mismatched | ForEach-Object {
-            $file = fullpath (cache_path $current.app $version $current.urls[$_])
+            $file = cache_path $current.app $version $current.urls[$_]
             Write-Host  "`tURL:`t`t$($current.urls[$_])"
             if (Test-Path $file) {
                 Write-Host  "`tFirst bytes:`t$((get_magic_bytes_pretty $file ' ').ToUpper())"

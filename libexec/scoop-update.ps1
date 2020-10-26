@@ -66,9 +66,9 @@ function update_scoop() {
     if ($null -eq $last_update) {$last_update = [System.DateTime]::Now}
     $last_update = $last_update.ToString('s')
     $show_update_log = get_config 'show_update_log' $true
-    $currentdir = fullpath $(versiondir 'scoop' 'current')
+    $currentdir = versiondir 'scoop' 'current'
     if (!(test-path "$currentdir\.git")) {
-        $newdir = fullpath $(versiondir 'scoop' 'new')
+        $newdir = versiondir 'scoop' 'new'
 
         # get git scoop
         git_clone -q $configRepo --branch $configBranch --single-branch "`"$newdir`""
@@ -210,7 +210,7 @@ function update($app, $global, $quiet = $false, $independent, $suggested, $use_c
 
             if ($check_hash) {
                 $manifest_hash = hash_for_url $manifest $url $architecture
-                $source = fullpath (cache_path $app $version $url)
+                $source = cache_path $app $version $url
                 $ok, $err = check_hash $source $manifest_hash $(show_app $app $bucket)
 
                 if (!$ok) {

@@ -104,7 +104,7 @@ function Find-Manifest($app, $bucket) {
 }
 
 function dl_with_cache($app, $version, $url, $to, $cookies = $null, $use_cache = $true) {
-    $cached = fullpath (cache_path $app $version $url)
+    $cached = cache_path $app $version $url
 
     if(!(test-path $cached) -or !$use_cache) {
         ensure $cachedir | Out-Null
@@ -255,7 +255,7 @@ function dl_with_cache_aria2($app, $version, $manifest, $architecture, $dir, $co
             'filename' = url_filename $url
             'target' = "$dir\$(url_filename $url)"
             'cachename' = fname (cache_path $app $version $url)
-            'source' = fullpath (cache_path $app $version $url)
+            'source' = cache_path $app $version $url
         }
 
         if(!(test-path $data.$url.source)) {
@@ -624,8 +624,6 @@ function cookie_header($cookies) {
 }
 
 function is_in_dir($dir, $check) {
-    $check = "$(fullpath $check)"
-    $dir = "$(fullpath $dir)"
     $check -match "^$([regex]::escape("$dir"))(\\|`$)"
 }
 
@@ -651,7 +649,6 @@ function hash_for_url($manifest, $url, $arch) {
 
 # returns (ok, err)
 function check_hash($file, $hash, $app_name) {
-    $file = fullpath $file
     if(!$hash) {
         warn "Warning: No hash in manifest. SHA256 for '$(fname $file)' is:`n    $(compute_hash $file 'sha256')"
         return $true, $null
@@ -1142,8 +1139,8 @@ function persist_data($manifest, $original_dir, $persist_dir) {
 
             $source = $source.TrimEnd("/").TrimEnd("\\")
 
-            $source = fullpath "$dir\$source"
-            $target = fullpath "$persist_dir\$target"
+            $source = "$dir\$source"
+            $target = "$persist_dir\$target"
 
             # if we have had persist data in the store, just create link and go
             if (Test-Path $target) {
