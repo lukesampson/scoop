@@ -39,6 +39,10 @@ function check_main_bucket {
 }
 
 function check_long_paths {
+    if ([System.Environment]::OSVersion.Version.Major -lt 10 -or [System.Environment]::OSVersion.Version.Build -lt 1607) {
+        warn 'This version of Windows does not support configuration of LongPaths.'
+        return $false
+    }
     $key = Get-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem' -ErrorAction SilentlyContinue -Name 'LongPathsEnabled'
     if (!$key -or ($key.LongPathsEnabled -eq 0)) {
         warn 'LongPaths support is not enabled.'
