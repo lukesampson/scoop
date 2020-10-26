@@ -12,6 +12,7 @@
 #   -k, --no-cache            Don't use the download cache
 #   -s, --skip                Skip hash validation (use with caution!)
 #   -q, --quiet               Hide extraneous messages
+#   -a, --all                 Update all apps (alternative to '*')
 
 . "$psscriptroot\..\lib\core.ps1"
 . "$psscriptroot\..\lib\shortcuts.ps1"
@@ -27,7 +28,7 @@
 
 reset_aliases
 
-$opt, $apps, $err = getopt $args 'gfiksq:' 'global', 'force', 'independent', 'no-cache', 'skip', 'quiet'
+$opt, $apps, $err = getopt $args 'gfiksqa:' 'global', 'force', 'independent', 'no-cache', 'skip', 'quiet', 'all'
 if ($err) { "scoop update: $err"; exit 1 }
 $global = $opt.g -or $opt.global
 $force = $opt.f -or $opt.force
@@ -35,6 +36,7 @@ $check_hash = !($opt.s -or $opt.skip)
 $use_cache = !($opt.k -or $opt.'no-cache')
 $quiet = $opt.q -or $opt.quiet
 $independent = $opt.i -or $opt.independent
+$all = $opt.a -or $opt.all
 
 # load config
 $configRepo = get_config SCOOP_REPO
@@ -295,7 +297,7 @@ if (!$apps) {
     $outdated = @()
     $apps_param = $apps
 
-    if ($apps_param -eq '*') {
+    if ($apps_param -eq '*' -or $all) {
         $apps = applist (installed_apps $false) $false
         if ($global) {
             $apps += applist (installed_apps $true) $true
