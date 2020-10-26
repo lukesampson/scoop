@@ -94,7 +94,7 @@ Get-Event | ForEach-Object {
 $Queue | ForEach-Object {
     $name, $json = $_
 
-    $substitutions = get_version_substitutions $json.version
+    $substitutions = Get-VersionSubstitution $json.version
 
     $wc = New-Object Net.Webclient
     if ($json.checkver.useragent) {
@@ -311,7 +311,7 @@ while ($in_progress -gt 0) {
             if ($Version -ne "") {
                 $ver = $Version
             }
-            autoupdate $App $Dir $json $ver $matchesHashtable
+            Invoke-AutoUpdate $App $Dir $json $ver $matchesHashtable
         } catch {
             error $_.Exception.Message
         }

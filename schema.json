@@ -86,6 +86,21 @@
             },
             "type": "object"
         },
+        "hashExtractionOrArrayOfHashExtractions": {
+            "anyOf": [
+                {
+                    "$ref": "#/definitions/hashExtraction"
+                },
+                {
+                    "items": {
+                        "$ref": "#/definitions/hashExtraction"
+                    },
+                    "minItems": 1,
+                    "type": "array",
+                    "uniqueItems": false
+                }
+            ]
+        },
         "architecture": {
             "additionalProperties": false,
             "properties": {
@@ -155,61 +170,88 @@
             "minItems": 1,
             "type": "array"
         },
-        "autoupdate": {
+        "autoupdateArch": {
             "additionalProperties": false,
             "properties": {
-                "architecture": {
+                "url": {
+                    "$ref": "#/definitions/autoupdateUriOrArrayOfAutoupdateUris"
+                },
+                "hash": {
+                    "$ref": "#/definitions/hashExtractionOrArrayOfHashExtractions"
+                },
+                "extract_dir": {
+                    "$ref": "#/definitions/stringOrArrayOfStrings"
+                },
+                "extract_to": {
+                    "$ref": "#/definitions/stringOrArrayOfStrings"
+                },
+                "env_add_path": {
+                    "$ref": "#/definitions/stringOrArrayOfStrings"
+                },
+                "env_set": {
+                    "type": "object"
+                },
+                "bin": {
+                    "$ref": "#/definitions/stringOrArrayOfStringsOrAnArrayOfArrayOfStrings"
+                },
+                "shortcuts": {
+                    "$ref": "#/definitions/shortcutsArray"
+                },
+                "installer": {
                     "additionalProperties": false,
                     "properties": {
-                        "32bit": {
-                            "additionalProperties": false,
-                            "properties": {
-                                "extract_dir": {
-                                    "type": "string"
-                                },
-                                "url": {
-                                    "format": "uri",
-                                    "type": "string"
-                                },
-                                "hash": {
-                                    "$ref": "#/definitions/hashExtraction"
-                                }
-                            },
-                            "type": "object"
-                        },
-                        "64bit": {
-                            "additionalProperties": false,
-                            "properties": {
-                                "extract_dir": {
-                                    "type": "string"
-                                },
-                                "url": {
-                                    "format": "uri",
-                                    "type": "string"
-                                },
-                                "hash": {
-                                    "$ref": "#/definitions/hashExtraction"
-                                }
-                            },
-                            "type": "object"
+                        "file": {
+                            "type": "string"
                         }
                     },
                     "type": "object"
                 },
-                "extract_dir": {
-                    "type": "string"
+                "post_install": {
+                    "$ref": "#/definitions/stringOrArrayOfStrings"
                 },
-                "hash": {
-                    "$ref": "#/definitions/hashExtraction"
+                "psmodule": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "name": {
+                            "type": "string"
+                        }
+                    },
+                    "type": "object"
+                },
+                "persist": {
+                    "$ref": "#/definitions/stringOrArrayOfStringsOrAnArrayOfArrayOfStrings"
                 },
                 "note": {
                     "$ref": "#/definitions/stringOrArrayOfStrings"
-                },
-                "url": {
-                    "format": "uri",
-                    "type": "string"
                 }
             },
+            "type": "object"
+        },
+        "autoupdate": {
+            "anyOf": [
+                {
+                    "$ref": "#/definitions/autoupdateArch"
+                },
+                {
+                    "properties": {
+                        "note": {
+                            "$ref": "#/definitions/stringOrArrayOfStrings"
+                        },
+                        "architecture": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "32bit": {
+                                    "$ref": "#/definitions/autoupdateArch"
+                                },
+                                "64bit": {
+                                    "$ref": "#/definitions/autoupdateArch"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
             "type": "object"
         },
         "checkver": {
@@ -361,6 +403,23 @@
                         "not": {
                             "pattern": "(\\$)"
                         },
+                        "type": "string"
+                    },
+                    "minItems": 1,
+                    "type": "array",
+                    "uniqueItems": true
+                }
+            ]
+        },
+        "autoupdateUriOrArrayOfAutoupdateUris": {
+            "anyOf": [
+                {
+                    "format": "uri",
+                    "type": "string"
+                },
+                {
+                    "items": {
+                        "format": "uri",
                         "type": "string"
                     },
                     "minItems": 1,
