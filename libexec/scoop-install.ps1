@@ -39,7 +39,9 @@ function is_installed($app, $global) {
 
         $version = @(versions $app $global)[-1]
         if (!(install_info $app $version $global)) {
-            error "It looks like a previous installation of $app failed.`nRun 'scoop uninstall $app$(gf $global)' before retrying the install."
+            warn "Purging previous failed installation of $app."
+            & "$PSScriptRoot\scoop-uninstall.ps1" $app$(gf $global)
+            return $false
         }
         warn "'$app' ($version) is already installed.`nUse 'scoop update $app$(gf $global)' to install a new version."
         return $true
@@ -94,7 +96,8 @@ if ($specific_versions.length -gt 0) {
 $specific_versions_paths = $specific_versions | ForEach-Object {
     $app, $bucket, $version = parse_app $_
     if (installed_manifest $app $version) {
-        abort "'$app' ($version) is already installed.`nUse 'scoop update $app$global_flag' to install a new version."
+        warn "'$app' ($version) is already installed.`nUse 'scoop update $app$(if ($global) { " --global" })' to install a new version."
+        continue
     }
 
     generate_user_manifest $app $bucket $version
