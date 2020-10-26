@@ -34,6 +34,10 @@ function install_app($app, $architecture, $global, $suggested, $use_cache = $tru
         return
     }
 
+    if ((default_architecture -neq "arm64") -and ($architecture -eq "arm64")) {
+        warn "ARM64 application probably won't run on this system."
+    }
+
     write-output "Installing '$app' ($version) [$architecture]"
 
     $dir = ensure (versiondir $app $version $global)

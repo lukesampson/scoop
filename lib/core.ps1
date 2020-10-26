@@ -647,6 +647,7 @@ function ensure_architecture($architecture_opt) {
     $architecture_opt = $architecture_opt.ToString().ToLower()
     switch($architecture_opt) {
         { @('64bit', '64', 'x64', 'amd64', 'x86_64', 'x86-64')  -contains $_ } { return '64bit' }
+        { @('arm64', 'aarch64', 'armv8')  -contains $_ } { return 'arm64' }
         { @('32bit', '32', 'x86', 'i386', '386', 'i686')  -contains $_ } { return '32bit' }
         default { throw [System.ArgumentException] "Invalid architecture: '$architecture_opt'"}
     }

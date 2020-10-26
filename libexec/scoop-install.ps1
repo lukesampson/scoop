@@ -14,7 +14,7 @@
 #   -i, --independent         Don't install dependencies automatically
 #   -k, --no-cache            Don't use the download cache
 #   -s, --skip                Skip hash validation (use with caution!)
-#   -a, --arch <32bit|64bit>  Use the specified architecture, if the app supports it
+#   -a, --arch <32bit|64bit|arm64>  Use the specified architecture, if the app supports it
 
 . "$psscriptroot\..\lib\core.ps1"
 . "$psscriptroot\..\lib\manifest.ps1"

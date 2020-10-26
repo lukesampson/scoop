@@ -27,7 +27,7 @@
 #       2 & 4 combined
 #
 # Options:
-#   -a, --arch <32bit|64bit>  Use the specified architecture, if the app supports it
+#   -a, --arch <32bit|64bit|arm64>  Use the specified architecture, if the app supports it
 #   -s, --scan For packages where VirusTotal has no information, send download URL
 #              for analysis (and future retrieval).  This requires you to configure
 #              your virustotal_api_key.

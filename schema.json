@@ -192,6 +192,22 @@
                                 }
                             },
                             "type": "object"
+                        },
+                        "arm64": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "extract_dir": {
+                                    "type": "string"
+                                },
+                                "url": {
+                                    "format": "uri",
+                                    "type": "string"
+                                },
+                                "hash": {
+                                    "$ref": "#/definitions/hashExtraction"
+                                }
+                            },
+                            "type": "object"
                         }
                     },
                     "type": "object"
@@ -412,6 +428,9 @@
                     "$ref": "#/definitions/architecture"
                 },
                 "64bit": {
+                    "$ref": "#/definitions/architecture"
+                },
+                "arm64": {
                     "$ref": "#/definitions/architecture"
                 }
             },

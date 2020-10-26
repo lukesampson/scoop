@@ -58,9 +58,14 @@ function install_info($app, $version, $global) {
     parse_json $path
 }
 
+function system_architecture {
+    if ($env:PROCESSOR_ARCHITECTURE -eq "ARM64") { return "arm64" }
+    if ([Environment]::Is64BitOperatingSystem) { return "64bit" } else { return "32bit" }
+}
+
 function default_architecture {
     $arch = get_config 'default-architecture'
-    $system = if ([Environment]::Is64BitOperatingSystem) { '64bit' } else { '32bit' }
+    $system = system_architecture
     if ($null -eq $arch) {
         $arch = $system
     } else {
@@ -73,6 +78,7 @@ function default_architecture {
     }
 
     return $arch
+
 }
 
 function arch_specific($prop, $manifest, $architecture) {
@@ -85,6 +91,13 @@ function arch_specific($prop, $manifest, $architecture) {
 }
 
 function supports_architecture($manifest, $architecture) {
+    # if no architecture is given in manifest, assume the application is not
+    # suitable for ARM64
+    if (!$manifest.architecture -and ($architecture -eq "arm64")) {
+        warn "This application probably does not support ARM64. You may use --arch option to specify installing 32bit version."
+        return $false
+    }
+
     return -not [String]::IsNullOrEmpty((arch_specific 'url' $manifest $architecture))
 }
 
