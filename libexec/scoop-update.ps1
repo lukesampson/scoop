@@ -76,11 +76,12 @@ function update_scoop() {
         # check if scoop was successful downloaded
         if (!(test-path "$newdir")) {
             abort 'Scoop update failed.'
+        } else {
+            # replace non-git scoop with the git version
+            Remove-Item -r -force $currentdir -ea stop
+            Move-Item $newdir $currentdir
         }
 
-        # replace non-git scoop with the git version
-        Remove-Item -r -force $currentdir -ea stop
-        Move-Item $newdir $currentdir
     } else {
         Push-Location $currentdir
 

@@ -101,7 +101,7 @@ function add_bucket($name, $repo) {
     write-host 'Checking repo... ' -nonewline
     $out = git_ls_remote $repo 2>&1
     if ($lastexitcode -ne 0) {
-        abort "'$repo' doesn't look like a valid git repository`n`nError given:`n$out"
+        abort "`ngit ls-remote '$repo' failed.`n`nError given:`n$out"
     }
     write-host 'ok'
 
