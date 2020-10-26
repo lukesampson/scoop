@@ -68,6 +68,13 @@ Describe 'Decompression function' -Tag 'Scoop', 'Decompress' {
             (Get-ChildItem $to).Count | Should -Be 1
         }
 
+        It "accept array path param" -Skip:$isUnix {
+            $to = test_extract "Expand-7zipArchive" @($test1, $test2, $test3, $test4)
+            $to | Should -Exist
+            Join-Path -Path $to -ChildPath "empty" | Should -Exist
+            (Get-ChildItem $to).Count | Should -Be 4
+        }
+
         It "works with '-Removal' switch (`$removal param)" -Skip:$isUnix {
             $test1 | Should -Exist
             test_extract "Expand-7zipArchive" $test1 $true
@@ -101,6 +108,12 @@ Describe 'Decompression function' -Tag 'Scoop', 'Decompress' {
             $to | Should -Exist
         }
 
+        It "accept array path param" -Skip:$isUnix {
+            mock get_config { $true }
+            $to = test_extract "Expand-MsiArchive" @($test1, $test2)
+            $to | Should -Exist
+        }
+
         It "works with '-Removal' switch (`$removal param)" -Skip:$isUnix {
             mock get_config { $false }
             $test1 | Should -Exist
@@ -127,6 +140,13 @@ Describe 'Decompression function' -Tag 'Scoop', 'Decompress' {
             (Get-ChildItem $to).Count | Should -Be 1
         }
 
+        It "accept array path param" -Skip:$isUnix {
+            $to = test_extract "Expand-InnoArchive" @($test)
+            $to | Should -Exist
+            "$to\empty" | Should -Exist
+            (Get-ChildItem $to).Count | Should -Be 1
+        }
+
         It "works with '-Removal' switch (`$removal param)" -Skip:$isUnix {
             $test | Should -Exist
             test_extract "Expand-InnoArchive" $test $true
@@ -142,6 +162,13 @@ Describe 'Decompression function' -Tag 'Scoop', 'Decompress' {
 
         It "extract compressed file" -Skip:$isUnix {
             $to = test_extract "Expand-ZipArchive" $test
+            $to | Should -Exist
+            "$to\empty" | Should -Exist
+            (Get-ChildItem $to).Count | Should -Be 1
+        }
+
+        It "accept array path param" -Skip:$isUnix {
+            $to = test_extract "Expand-ZipArchive" @($test)
             $to | Should -Exist
             "$to\empty" | Should -Exist
             (Get-ChildItem $to).Count | Should -Be 1
