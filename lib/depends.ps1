@@ -21,13 +21,13 @@ function deps($app, $arch) {
 
 function dep_resolve($app, $arch, $resolved, $unresolved) {
     $app, $bucket, $null = parse_app $app
+    if ($bucket -and ((Get-LocalBucket) -notcontains $bucket)) {
+        abort "Bucket '$bucket' not installed. Add it with 'scoop bucket add $bucket' or 'scoop bucket add $bucket <repo>'."
+    }
     $unresolved += $app
     $null, $manifest, $null, $null = Find-Manifest $app $bucket
 
     if(!$manifest) {
-        if(((Get-LocalBucket) -notcontains $bucket) -and $bucket) {
-            warn "Bucket '$bucket' not installed. Add it with 'scoop bucket add $bucket' or 'scoop bucket add $bucket <repo>'."
-        }
         abort "Couldn't find manifest for '$app'$(if(!$bucket) { '.' } else { " from '$bucket' bucket." })"
     }
 

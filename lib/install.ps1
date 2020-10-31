@@ -86,9 +86,13 @@ function Find-Manifest($app, $bucket) {
         $manifest = url_manifest $url
     } else {
         # check buckets
-        $manifest, $bucket = find_manifest $app $bucket
+        if ($bucket) {
+            $manifest, $null = find_manifest $app $bucket
+        } else {
+            $manifest, $bucket = find_manifest $app
+        }
 
-        if(!$manifest) {
+        if(!$manifest -and !$bucket) {
             # couldn't find app in buckets: check if it's a local path
             $path = $app
             if(!$path.endswith('.json')) { $path += '.json' }
