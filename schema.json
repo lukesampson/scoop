@@ -7,6 +7,10 @@
             "pattern": "^([a-fA-F0-9]{64}|(sha1|sha256|sha512|md5):([a-fA-F0-9]{32}|[a-fA-F0-9]{40}|[a-fA-F0-9]{64}|[a-fA-F0-9]{128}))$",
             "type": "string"
         },
+        "jsonPathPattern": {
+            "pattern": "^\\$[.\\[].*$",
+            "type": "string"
+        },
         "hash": {
             "anyOf": [
                 {
@@ -35,13 +39,11 @@
                     "type": "string"
                 },
                 "jp": {
-                    "pattern": "^\\$[.[].*$",
-                    "type": "string",
+                    "$ref": "#/definitions/jsonPathPattern",
                     "description": "Same as 'jsonpath'"
                 },
                 "jsonpath": {
-                    "pattern": "^\\$[.[].*$",
-                    "type": "string"
+                    "$ref": "#/definitions/jsonPathPattern"
                 },
                 "xpath": {
                     "type": "string"
@@ -239,13 +241,11 @@
                             "type": "string"
                         },
                         "jp": {
-                            "pattern": "^\\$[.[].*$",
-                            "type": "string",
+                            "$ref": "#/definitions/jsonPathPattern",
                             "description": "Same as 'jsonpath'"
                         },
                         "jsonpath": {
-                            "pattern": "^\\$[.[].*$",
-                            "type": "string"
+                            "$ref": "#/definitions/jsonPathPattern"
                         },
                         "xpath": {
                             "type": "string"
