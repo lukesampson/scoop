@@ -72,27 +72,28 @@ param(
 . "$psscriptroot\..\lib\install.ps1" # needed for hash generation
 . "$psscriptroot\..\lib\unix.ps1"
 
-$Dir = Resolve-Path $Dir
-$Search = $App
-
 # get apps to check
 $Queue = @()
-$json = ''
-Get-ChildItem $Dir "$App.json" | ForEach-Object {
-    $json = parse_json "$Dir\$($_.Name)"
-    if ($json.checkver) {
-        $Queue += , @($_.Name, $json)
-    }
+if((Test-Path $App) -and $App -ne "*") {
+    $Queue = @(Get-ChildItem $App)
+} else {
+    $Dir = Resolve-Path $Dir
+    $Queue = @(Get-ChildItem -Path $Dir -Filter "$App.json")
 }
 
 # clear any existing events
-Get-Event | ForEach-Object {
-    Remove-Event $_.SourceIdentifier
-}
+Get-Event | Remove-Event
+Get-EventSubscriber | Unregister-Event
 
 # start all downloads
 $Queue | ForEach-Object {
-    $name, $json = $_
+    $file = $_
+    $json = parse_json $file.FullName
+    $name = (strip_ext $file.Name)
+    if (!$json.checkver) {
+        New-Event -SourceIdentifier $name -MessageData "skip" | Out-Null
+        return
+    }
 
     $substitutions = get_version_substitutions $json.version
 
@@ -102,7 +103,7 @@ $Queue | ForEach-Object {
     } else {
         $wc.Headers.Add('User-Agent', (Get-UserAgent))
     }
-    Register-ObjectEvent $wc downloadstringcompleted -ErrorAction Stop | Out-Null
+    Register-ObjectEvent -InputObject $wc -EventName DownloadStringCompleted -ErrorAction Stop | Out-Null
 
     $githubRegex = '\/releases\/tag\/(?:v|V)?([\d.]+)'
 
@@ -117,7 +118,7 @@ $Queue | ForEach-Object {
 
     if ($json.checkver -eq 'github') {
         if (!$json.homepage.StartsWith('https://github.com/')) {
-            error "$name checkver expects the homepage to be a github repository"
+            error "$name`: checkver expects the homepage to be a github repository"
         }
         $url = $json.homepage + '/releases/latest'
         $regex = $githubRegex
@@ -158,7 +159,8 @@ $Queue | ForEach-Object {
     $url = substitute $url $substitutions
 
     $state = New-Object psobject @{
-        app      = (strip_ext $name);
+        app      = $name;
+        dir      = $file.Directory;
         url      = $url;
         regex    = $regex;
         json     = $json;
@@ -172,9 +174,9 @@ $Queue | ForEach-Object {
     $wc.DownloadStringAsync($url, $state)
 }
 
-function next($er) {
-    Write-Host "$App`: " -NoNewline
-    Write-Host $er -ForegroundColor DarkRed
+function next($app, $err) {
+    Write-Host "$app`: " -NoNewline
+    Write-Host $err -ForegroundColor DarkRed
 }
 
 # wait for all to complete
@@ -183,9 +185,13 @@ while ($in_progress -gt 0) {
     $ev = Wait-Event
     Remove-Event $ev.SourceIdentifier
     $in_progress--
+    if($ev.MessageData -eq "skip") {
+        continue
+    }
 
     $state = $ev.SourceEventArgs.UserState
     $app = $state.app
+    $dir = $state.dir
     $json = $state.json
     $url = $state.url
     $regexp = $state.regex
@@ -203,7 +209,7 @@ while ($in_progress -gt 0) {
     }
 
     if ($err) {
-        next "$($err.message)`r`nURL $url is not valid"
+        next $app "$($err.message)`r`nURL $url is not valid"
         continue
     }
 
@@ -218,7 +224,7 @@ while ($in_progress -gt 0) {
             $ver = json_path_legacy $page $jsonpath
         }
         if (!$ver) {
-            next "couldn't find '$jsonpath' in $url"
+            next $app "couldn't find '$jsonpath' in $url"
             continue
         }
     }
@@ -235,7 +241,7 @@ while ($in_progress -gt 0) {
         # Getting version from XML, using XPath
         $ver = $xml.SelectSingleNode($xpath, $nsmgr).'#text'
         if (!$ver) {
-            next "couldn't find '$xpath' in $url"
+            next $app "couldn't find '$xpath' in $url"
             continue
         }
     }
@@ -269,20 +275,20 @@ while ($in_progress -gt 0) {
                 $ver = $matchesHashtable['version']
             }
         } else {
-            next "couldn't match '$regexp' in $url"
+            next $app "couldn't match '$regexp' in $url"
             continue
         }
     }
 
     if (!$ver) {
-        next "couldn't find new version in $url"
+        next $app "couldn't find new version in $url"
         continue
     }
 
     # Skip actual only if versions are same and there is no -f
     if (($ver -eq $expected_ver) -and !$ForceUpdate -and $SkipUpdated) { continue }
 
-    Write-Host "$App`: " -NoNewline
+    Write-Host "$app`: " -NoNewline
 
     # version hasn't changed (step over if forced update)
     if ($ver -eq $expected_ver -and !$ForceUpdate) {
@@ -311,7 +317,7 @@ while ($in_progress -gt 0) {
             if ($Version -ne "") {
                 $ver = $Version
             }
-            autoupdate $App $Dir $json $ver $matchesHashtable
+            autoupdate $app $dir $json $ver $matchesHashtable
         } catch {
             error $_.Exception.Message
         }
