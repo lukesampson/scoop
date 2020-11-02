@@ -496,7 +496,7 @@ function movedir($from, $to) {
 
     $proc = New-Object System.Diagnostics.Process
     $proc.StartInfo.FileName = 'robocopy.exe'
-    $proc.StartInfo.Arguments = "`"$from`" `"$to`" /e /move"
+    $proc.StartInfo.Arguments = "`"$from`" `"$to`" /e /move /sl"
     $proc.StartInfo.RedirectStandardOutput = $true
     $proc.StartInfo.RedirectStandardError = $true
     $proc.StartInfo.UseShellExecute = $false
