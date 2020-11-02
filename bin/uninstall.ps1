@@ -27,8 +27,10 @@ if ($purge) {
 } else {
     warn 'This will uninstall Scoop and all the programs that have been installed with Scoop!'
 }
-$yn = Read-Host 'Are you sure? (yN)'
-if ($yn -notlike 'y*') { exit }
+
+$code = Get-Random -Maximum 10000 -Minimum 1000
+$yn = Read-Host "Are you sure? Input code ($($code)) to confirm"
+if ($yn -ne $code) { exit }
 
 $errors = $false
 
