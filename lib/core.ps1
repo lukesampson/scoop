@@ -930,6 +930,13 @@ function handle_special_urls($url)
         # Reshapes the URL to avoid redirections
         $url = "https://downloads.sourceforge.net/project/$($matches['project'])/$($matches['file'])"
     }
+
+    # MediaFire.com
+    if ($url -match "^.*mediafire.com\/\w+\/(?<random>\w+)\/(?<filename>.*)\/file(?:#\/.*)?$") {
+        if ((Invoke-RestMethod -Uri $url) -match 'aria-label="Download file"\s+href="(?<url>[^"]+)"') {
+            $url = $Matches.url
+        }
+    }
     return $url
 }
 
