@@ -1,5 +1,5 @@
 # https://github.com/edymtt/nugetstandalone
-$destinationFolder = "$psscriptroot\packages"
+$destinationFolder = "$PSScriptRoot\packages"
 if ((Test-Path -path $destinationFolder)) {
     Remove-Item -Path $destinationFolder -Recurse | Out-Null
 }
