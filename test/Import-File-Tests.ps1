@@ -10,7 +10,7 @@ describe 'Style constraints for non-binary project files' {
         $repo_files |
             where-object { $_.fullname -inotmatch $($project_file_exclusions -join '|') } |
             where-object { $_.fullname -inotmatch '(.exe|.zip|.dll)$' } |
-            where-object { $_.fullname -inotmatch '(unformated)' }
+            where-object { $_.fullname -inotmatch '(unformatted)' }
     )
 
     $files_exist = ($files.Count -gt 0)
