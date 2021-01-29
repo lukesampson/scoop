@@ -955,6 +955,35 @@ function get_magic_bytes_pretty($file, $glue = ' ') {
     return (get_magic_bytes $file | ForEach-Object { $_.ToString('x2') }) -join $glue
 }
 
+function Out-UTF8File {
+    <#
+    .SYNOPSIS
+        Write UTF8 (no-bom) file.
+    .DESCRIPTION
+        Use Set-Content -encoding utf8 on pwsh and WriteAllLines on powershell.
+    .PARAMETER Path
+        Specifies filename to be written.
+    .PARAMETER Content
+        Specifies content of to be written to file.
+    #>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory, ValueFromPipelineByPropertyName)]
+        [Alias('Path', 'LiteralPath')]
+        [System.IO.FileInfo] $File,
+        [Parameter(Mandatory, ValueFromPipeline, ValueFromPipelineByPropertyName)]
+        [Alias('Value')]
+        $Content
+    )
+    process {
+        if ($PSVersionTable.PSVersion.Major -ge 6) {
+            Set-Content -LiteralPath $File -Value $Content -Encoding utf8
+        } else {
+            [System.IO.File]::WriteAllLines($File, ($Content -join "`r`n"))
+        }
+    }
+}
+
 ##################
 # Core Bootstrap #
 ##################
