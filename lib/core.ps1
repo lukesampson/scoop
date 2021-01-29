@@ -398,7 +398,9 @@ function Invoke-ExternalCommand {
         [Parameter(ParameterSetName = "Default")]
         [Alias("Log")]
         [String]
-        $LogPath
+        $LogPath,
+        [Switch]
+        $UseFileContext
     )
     if ($Activity) {
         Write-Host "$Activity " -NoNewline
@@ -407,6 +409,7 @@ function Invoke-ExternalCommand {
     $Process.StartInfo.FileName = $FilePath
     $Process.StartInfo.Arguments = ($ArgumentList | Select-Object -Unique) -join ' '
     $Process.StartInfo.UseShellExecute = $false
+    if ($UseFileContext) { $Process.StartInfo.WorkingDirectory = Split-Path $FilePath }
     if ($LogPath) {
         if ($FilePath -match '(^|\W)msiexec($|\W)') {
             $Process.StartInfo.Arguments += " /lwe `"$LogPath`""
