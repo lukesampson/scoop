@@ -35,7 +35,7 @@ function find_hash_in_textfile([String] $url, [Hashtable] $substitutions, [Strin
         '$sha1' = '([a-fA-F0-9]{40})';
         '$sha256' = '([a-fA-F0-9]{64})';
         '$sha512' = '([a-fA-F0-9]{128})';
-        '$checksum' = '([a-fA-F0-9]{32,128})';
+        '$checksum' = '([a-fA-F0-9]{128}|[a-fA-F0-9]{64}|[a-fA-F0-9]{40}|[a-fA-F0-9]{32})';
         '$base64' = '([a-zA-Z0-9+\/=]{24,88})';
     }
 
