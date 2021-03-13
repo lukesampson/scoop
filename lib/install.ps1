@@ -228,41 +228,41 @@ function dl_with_cache_aria2($app, $version, $manifest, $architecture, $dir, $co
         "--summary-interval 0"
     )
 
-    if($cookies) {
+    if ($cookies) {
         $options += "--header='Cookie: $(cookie_header $cookies)'"
     }
 
     $proxy = get_config 'proxy'
-    if($proxy -ne 'none') {
-        if([Net.Webrequest]::DefaultWebProxy.Address) {
+    if ($proxy -ne 'none') {
+        if ([Net.Webrequest]::DefaultWebProxy.Address) {
             $options += "--all-proxy='$([Net.Webrequest]::DefaultWebProxy.Address.Authority)'"
         }
-        if([Net.Webrequest]::DefaultWebProxy.Credentials.UserName) {
+        if ([Net.Webrequest]::DefaultWebProxy.Credentials.UserName) {
             $options += "--all-proxy-user='$([Net.Webrequest]::DefaultWebProxy.Credentials.UserName)'"
         }
-        if([Net.Webrequest]::DefaultWebProxy.Credentials.Password) {
+        if ([Net.Webrequest]::DefaultWebProxy.Credentials.Password) {
             $options += "--all-proxy-passwd='$([Net.Webrequest]::DefaultWebProxy.Credentials.Password)'"
         }
     }
 
     $more_options = get_config 'aria2-options'
-    if($more_options) {
+    if ($more_options) {
         $options += $more_options
     }
 
-    foreach($url in $urls) {
+    foreach ($url in $urls) {
         $data.$url = @{
-            'filename' = url_filename $url
-            'target' = "$dir\$(url_filename $url)"
+            'filename'  = url_filename $url
+            'target'    = "$dir\$(url_filename $url)"
             'cachename' = fname (cache_path $app $version $url)
-            'source' = fullpath (cache_path $app $version $url)
+            'source'    = fullpath (cache_path $app $version $url)
         }
 
-        if(!(test-path $data.$url.source)) {
+        if (!(test-path $data.$url.source)) {
             $has_downloads = $true
             # create aria2 input file content
             $urlstxt_content += "$(handle_special_urls $url)`n"
-            if(!$url.Contains('sourceforge.net')) {
+            if (!$url.Contains('sourceforge.net')) {
                 $urlstxt_content += "    referer=$(strip_filename $url)`n"
             }
             $urlstxt_content += "    dir=$cachedir`n"
@@ -274,7 +274,7 @@ function dl_with_cache_aria2($app, $version, $manifest, $architecture, $dir, $co
         }
     }
 
-    if($has_downloads) {
+    if ($has_downloads) {
         # write aria2 input file
         Set-Content -Path $urlstxt $urlstxt_content
 
@@ -307,38 +307,49 @@ function dl_with_cache_aria2($app, $version, $manifest, $architecture, $dir, $co
         }
         Write-Host ''
 
-        if($lastexitcode -gt 0) {
-            error "Download failed! (Error $lastexitcode) $(aria_exit_code $lastexitcode)"
-            error $urlstxt_content
-            error $aria2
-            abort $(new_issue_msg $app $bucket "download via aria2 failed")
+        if ($lastexitcode -gt 0) {
+            warn "Download failed! (Error $lastexitcode) $(aria_exit_code $lastexitcode)"
+            warn $urlstxt_content
+            warn $aria2
+            warn $(new_issue_msg $app $bucket "download via aria2 failed")
+
+            Write-Host "Fallback to default downloader ..."
+
+            try {
+                foreach ($url in $urls) {
+                    dl_with_cache $app $version $url "$dir\$($data.$url.filename)" $cookies $use_cache
+                }
+            } catch {
+                write-host -f darkred $_
+                abort "URL $url is not valid"
+            }
         }
 
         # remove aria2 input file when done
-        if(test-path($urlstxt)) {
+        if (test-path($urlstxt)) {
             Remove-Item $urlstxt
         }
     }
 
-    foreach($url in $urls) {
+    foreach ($url in $urls) {
 
         $metalink_filename = get_filename_from_metalink $data.$url.source
-        if($metalink_filename) {
+        if ($metalink_filename) {
             Remove-Item $data.$url.source -Force
             Rename-Item -Force (Join-Path -Path $cachedir -ChildPath $metalink_filename) $data.$url.source
         }
 
         # run hash checks
-        if($check_hash) {
+        if ($check_hash) {
             $manifest_hash = hash_for_url $manifest $url $architecture
             $ok, $err = check_hash $data.$url.source $manifest_hash $(show_app $app $bucket)
-            if(!$ok) {
+            if (!$ok) {
                 error $err
-                if(test-path $data.$url.source) {
+                if (test-path $data.$url.source) {
                     # rm cached file
                     Remove-Item -force $data.$url.source
                 }
-                if($url.Contains('sourceforge.net')) {
+                if ($url.Contains('sourceforge.net')) {
                     Write-Host -f yellow 'SourceForge.net is known for causing hash validation fails. Please try again before opening a ticket.'
                 }
                 abort $(new_issue_msg $app $bucket "hash check failed")
@@ -346,12 +357,12 @@ function dl_with_cache_aria2($app, $version, $manifest, $architecture, $dir, $co
         }
 
         # copy or move file to target location
-        if(!(test-path $data.$url.source) ) {
+        if (!(test-path $data.$url.source) ) {
             abort $(new_issue_msg $app $bucket "cached file not found")
         }
 
-        if(!($dir -eq $cachedir)) {
-            if($use_cache) {
+        if (!($dir -eq $cachedir)) {
+            if ($use_cache) {
                 Copy-Item $data.$url.source $data.$url.target
             } else {
                 Move-Item $data.$url.source $data.$url.target -force
