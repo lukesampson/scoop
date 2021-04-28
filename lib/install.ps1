@@ -200,7 +200,7 @@ function get_filename_from_metalink($file) {
 
 function dl_with_cache_aria2($app, $version, $manifest, $architecture, $dir, $cookies = $null, $use_cache = $true, $check_hash = $true) {
     $data = @{}
-    $urls = @(url $manifest $architecture)
+    $urls = @(script:url $manifest $architecture)
 
     # aria2 input file
     $urlstxt = Join-Path $cachedir "$app.txt"
@@ -526,7 +526,7 @@ function dl_urls($app, $version, $manifest, $bucket, $architecture, $dir, $use_c
 
     # can be multiple urls: if there are, then msi or installer should go last,
     # so that $fname is set properly
-    $urls = @(url $manifest $architecture)
+    $urls = @(script:url $manifest $architecture)
 
     # can be multiple cookies: they will be used for all HTTP requests.
     $cookies = $manifest.cookie
@@ -641,7 +641,7 @@ function hash_for_url($manifest, $url, $arch) {
 
     if($hashes.length -eq 0) { return $null }
 
-    $urls = @(url $manifest $arch)
+    $urls = @(script:url $manifest $arch)
 
     $index = [array]::indexof($urls, $url)
     if($index -eq -1) { abort "Couldn't find hash in manifest for '$url'." }

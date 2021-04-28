@@ -77,10 +77,10 @@ function script_deps($script) {
 function install_deps($manifest, $arch) {
     $deps = @()
 
-    if (!(Test-HelperInstalled -Helper 7zip) -and (Test-7zipRequirement -URL (url $manifest $arch))) {
+    if (!(Test-HelperInstalled -Helper 7zip) -and (Test-7zipRequirement -URL (script:url $manifest $arch))) {
         $deps += '7zip'
     }
-    if (!(Test-HelperInstalled -Helper Lessmsi) -and (Test-LessmsiRequirement -URL (url $manifest $arch))) {
+    if (!(Test-HelperInstalled -Helper Lessmsi) -and (Test-LessmsiRequirement -URL (script:url $manifest $arch))) {
         $deps += 'lessmsi'
     }
     if (!(Test-HelperInstalled -Helper Innounp) -and $manifest.innosetup) {
