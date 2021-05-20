@@ -360,6 +360,23 @@ function dl_with_cache_aria2($app, $version, $manifest, $architecture, $dir, $co
     }
 }
 
+function get_headers($url) {
+    $hosts = get_config "hosts"
+    if ($hosts) {
+        $hosts | Where-Object { $url -match $_.match } | ForEach-Object {
+            return $_.headers
+        }
+    }
+    return {}
+}
+
+function get-members($obj) {
+    $obj | Get-Member -MemberType NoteProperty | ForEach-Object {
+        $key = $_.Name
+        [PSCustomObject]@{Key = $key; Value = $obj."$key"}
+    }
+}
+
 # download with filesize and progress indicator
 function dl($url, $to, $cookies, $progress) {
     $reqUrl = ($url -split "#")[0]
@@ -369,8 +386,19 @@ function dl($url, $to, $cookies, $progress) {
         if (-not ($url -imatch "sourceforge\.net" -or $url -imatch "portableapps\.com")) {
             $wreq.referer = strip_filename $url
         }
+        if ($url -imatch "api\.github\.com\/repos") {
+           $wreq.accept = "application/octet-stream"
+           $wreq.headers["Authorization"] = "token $(get_config 'gh_api_token')"
+        }
         if($cookies) {
             $wreq.headers.add('Cookie', (cookie_header $cookies))
+        }
+
+        $customHeaders = get_headers $url
+        if ($customHeaders) {
+            get-members $customHeaders | ForEach-Object {
+               $wreq.headers[$_.Key] = $_.Value
+            }
         }
     }
 
