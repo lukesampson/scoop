@@ -181,7 +181,19 @@ function versiondir($app, $version, $global) { "$(appdir $app $global)\$version"
 function persistdir($app, $global) { "$(basedir $global)\persist\$app" }
 function usermanifestsdir { "$(basedir)\workspace" }
 function usermanifest($app) { "$(usermanifestsdir)\$app.json" }
-function cache_path($app, $version, $url) { "$cachedir\$app#$version#$($url -replace '[^\w\.\-]+', '_')" }
+function cache_path($app, $version, $url) {
+    $filename = "$app#$version#$url"
+    if ($filename.Length -ge 260) {
+        $url = $url -replace '\?.*', ''
+        $filename = "$app#$version#$url"
+        if ($filename.Length -ge 260) {
+            $filename = "$app#$version#$(Split-Path $url -leaf)"
+        }
+    }
+    $filename = $filename -replace '[^\w\.\-\#]+', '_'
+    $path = Join-Path $SCOOP_CACHE_DIRECTORY $filename
+    return $path
+}
 
 # apps
 function sanitary_path($path) { return [regex]::replace($path, "[/\\?:*<>|]", "") }
