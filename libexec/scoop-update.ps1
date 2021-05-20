@@ -248,7 +248,7 @@ function update($app, $global, $quiet = $false, $independent, $suggested, $use_c
     env_rm_path $old_manifest $dir $global
     env_rm $old_manifest $global
 
-    # If a junction was used during install, that will have been used
+    # If a symbolic link was used during install, that will have been used
     # as the reference directory. Otherwise it will just be the version
     # directory.
     $refdir = unlink_current $dir

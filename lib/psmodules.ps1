@@ -26,7 +26,7 @@ function install_psmodule($manifest, $dir, $global) {
         & "$env:COMSPEC" /c "rmdir `"$linkfrom`""
     }
 
-    & "$env:COMSPEC" /c "mklink /j `"$linkfrom`" `"$dir`"" | out-null
+    & "$env:COMSPEC" /c "mklink /d `"$linkfrom`" `"$dir`"" | out-null
 }
 
 function uninstall_psmodule($manifest, $dir, $global) {

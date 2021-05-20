@@ -44,7 +44,7 @@ function do_uninstall($app, $global) {
     run_uninstaller $manifest $architecture $dir
     rm_shims $manifest $global $architecture
 
-    # If a junction was used during install, that will have been used
+    # If a symbolic link was used during install, that will have been used
     # as the reference directory. Othewise it will just be the version
     # directory.
     $refdir = unlink_current (appdir $app $global)
