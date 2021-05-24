@@ -78,6 +78,7 @@ Once installed, run `scoop help` for instructions.
 The default setup is configured so all user installed programs and Scoop itself live in `C:\Users\<user>\scoop`.
 Globally installed programs (`--global`) live in `C:\ProgramData\scoop`.
 These settings can be changed through environment variables.
+- Note: You need administrator rights if you want to install a program globally.
 
 ### Install Scoop to a Custom Directory by changing `SCOOP`
 
