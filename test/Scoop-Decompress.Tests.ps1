@@ -19,13 +19,13 @@ Describe 'Decompression function' -Tag 'Scoop', 'Decompress' {
         It "Decompression test cases should exist" {
             $testcases = "$working_dir\TestCases.zip"
             $testcases | Should -Exist
-            compute_hash $testcases 'sha256' | Should -Be '695bb18cafda52644a19afd184b2545e9c48f1a191f7ff1efc26cb034587079c'
+            compute_hash $testcases 'sha256' | Should -Be '247AED6905B0705E5A0E16688A4F2FC3B69B89E0E6FCEE854068BCE55AE7B2CE'
             if (!$isUnix) {
                 Microsoft.Powershell.Archive\Expand-Archive $testcases $working_dir
             }
         }
     }
-
+<#
     Context "7zip extraction" {
 
         BeforeAll {
@@ -152,5 +152,29 @@ Describe 'Decompression function' -Tag 'Scoop', 'Decompress' {
             test_extract "Expand-ZipArchive" $test $true
             $test | Should -Not -Exist
         }
+    }
+#>
+    Context "zstd extraction" {
+
+        BeforeAll {
+            $test1 = "$working_dir\empty.zst"
+            $test2 = "$working_dir\zstTest2.tar.zst"
+        }
+
+        It "extract zstd compressed file" -Skip:$isUnix {
+            $to = test_extract "Expand-ZstdArchive" $test1
+            $to | Should -Exist
+            "$to" | Should -Exist
+            (Get-ChildItem $to).Count | Should -Be 1
+        }
+
+        It "extract tar zstd compressed file" -Skip:$isUnix {
+            # file ext: tgz
+            $to = test_extract "Expand-ZstdArchive" $test2
+            $to | Should -Exist
+            "$to\empty" | Should -Exist
+            (Get-ChildItem $to).Count | Should -Be 1
+        }
+
     }
 }

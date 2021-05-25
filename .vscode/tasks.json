@@ -1,0 +1,14 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Uninstall gcc task",
+            "command": "./bin/scoop.ps1",
+            "type": "shell",
+            "args": [
+                "uninstall",
+                "gcc"
+            ],
+        }
+    ]
+}

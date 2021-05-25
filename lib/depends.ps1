@@ -80,6 +80,10 @@ function install_deps($manifest, $arch) {
     if (!(Test-HelperInstalled -Helper 7zip) -and (Test-7zipRequirement -URL (url $manifest $arch))) {
         $deps += '7zip'
     }
+    if (!(Test-HelperInstalled -Helper Zstd) -and (Test-ZstdRequirement -URL (url $manifest $arch))) {
+        $deps += 'zstd'
+        $deps += '7zip'
+    }
     if (!(Test-HelperInstalled -Helper Lessmsi) -and (Test-LessmsiRequirement -URL (url $manifest $arch))) {
         $deps += 'lessmsi'
     }
