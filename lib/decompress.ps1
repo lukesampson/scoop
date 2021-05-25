@@ -16,7 +16,25 @@ function Test-7zipRequirement {
             return ($URL | Where-Object { Test-7zipRequirement -File $_ }).Count -gt 0
         }
     } else {
-        return $File -match '\.((gz)|(tar)|(tgz)|(lzma)|(bz)|(bz2)|(7z)|(rar)|(iso)|(xz)|(lzh)|(nupkg))$'
+        return $File -match '\.((gz)|(tar)|(tgz)|(lzma)|(bz)|(bz2)|(7z)|(rar)|(iso)|(xz)|(lzh)|(nupkg)|(tar.zst))$'
+    }
+}
+
+function Test-ZstdRequirement {
+    [CmdletBinding(DefaultParameterSetName = "URL")]
+    [OutputType([Boolean])]
+    param (
+        [Parameter(Mandatory = $true, ParameterSetName = "URL")]
+        [String[]]
+        $URL,
+        [Parameter(Mandatory = $true, ParameterSetName = "File")]
+        [String]
+        $File
+    )
+    if ($URL) {
+        return ($URL | Where-Object { Test-ZstdRequirement -File $_ }).Count -gt 0
+    } else {
+        return $File -match '\.zst$'
     }
 }
 
@@ -55,6 +73,14 @@ function Expand-7zipArchive {
         [Switch]
         $Removal
     )
+    # 7zip currently does not support zstd compression, so do this workaround
+    $IsTarZst = ($Path -match '\.tar.zst$')
+    if ($IsTarZst) {
+        $OrigPath = $Path
+        $TarFilename = (strip_ext (fname $Path))
+        $Path = "$DestinationPath\$TarFilename"
+        Expand-ZstdArchive -Path "$OrigPath" -DestinationPath $Path
+    }
     if ((get_config 7ZIPEXTRACT_USE_EXTERNAL)) {
         try {
             $7zPath = (Get-Command '7z' -CommandType Application | Select-Object -First 1).Source
@@ -97,6 +123,61 @@ function Expand-7zipArchive {
         } else {
             abort "Failed to list files in $Path.`nNot a 7-Zip supported archive file."
         }
+    }
+    if ($IsTarZst) {
+        # always remove extracted .tar file
+        Remove-Item $Path -Force
+        $Path = $OrigPath
+    }
+    if ($Removal) {
+        # Remove original archive file
+        Remove-Item $Path -Force
+    }
+}
+
+function Expand-ZstdArchive {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, Position = 0, ValueFromPipeline = $true)]
+        [String]
+        $Path,
+        [Parameter(Position = 1)]
+        [String]
+        $DestinationPath = (Split-Path $Path),
+        [String]
+        $ExtractDir,
+        [Parameter(ValueFromRemainingArguments = $true)]
+        [String]
+        $Switches,
+        [ValidateSet("All")]
+        [String]
+        $Overwrite,
+        [Switch]
+        $Removal
+    )
+
+    $ZstdPath = Get-HelperPath -Helper Zstd
+    $LogPath = "$(Split-Path $Path)\zstd.log"
+    $ArgList = @('-d', "-o `"$DestinationPath`"", "`"$Path`"")
+
+    if ($Switches) {
+        $ArgList += (-split $Switches)
+    }
+    switch ($Overwrite) {
+        "All" { $ArgList += "-f" }
+    }
+
+    try {
+        $Status = Invoke-ExternalCommand $ZstdPath $ArgList -LogPath $LogPath
+    } catch [System.Management.Automation.ParameterBindingException] {
+        Set-TerminatingError -Title 'Ignore|-''zstd'' is not installed or cannot be used'
+    }
+
+    if (!$Status) {
+        abort "Failed to extract files from $Path.`nLog file:`n  $(friendly_path $LogPath)`n$(new_issue_msg $app $bucket 'decompress error')"
+    }
+    if (Test-Path $LogPath) {
+        Remove-Item $LogPath -Force
     }
     if ($Removal) {
         # Remove original archive file

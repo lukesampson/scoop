@@ -19,7 +19,7 @@ Describe 'Decompression function' -Tag 'Scoop', 'Decompress' {
         It "Decompression test cases should exist" {
             $testcases = "$working_dir\TestCases.zip"
             $testcases | Should -Exist
-            compute_hash $testcases 'sha256' | Should -Be '695bb18cafda52644a19afd184b2545e9c48f1a191f7ff1efc26cb034587079c'
+            compute_hash $testcases 'sha256' | Should -Be '60e588750b3eaef80b0436bfcbc36cd26f90acc2e7a00a936c6e692133373fcc'
             if (!$isUnix) {
                 Microsoft.Powershell.Archive\Expand-Archive $testcases $working_dir
             }
@@ -38,6 +38,7 @@ Describe 'Decompression function' -Tag 'Scoop', 'Decompress' {
             $test2 = "$working_dir\7ZipTest2.tgz"
             $test3 = "$working_dir\7ZipTest3.tar.bz2"
             $test4 = "$working_dir\7ZipTest4.tar.gz"
+            $test5 = "$working_dir\7ZipTest5.tar.zst"
         }
 
         It "extract normal compressed file" -Skip:$isUnix {
@@ -63,6 +64,14 @@ Describe 'Decompression function' -Tag 'Scoop', 'Decompress' {
 
         It "extract nested compressed file with different inner name" -Skip:$isUnix {
             $to = test_extract "Expand-7zipArchive" $test4
+            $to | Should -Exist
+            "$to\empty" | Should -Exist
+            (Get-ChildItem $to).Count | Should -Be 1
+        }
+
+        It "extract nested compressed file" -Skip:$isUnix {
+            # file ext: tar.zst
+            $to = test_extract "Expand-7zipArchive" $test5
             $to | Should -Exist
             "$to\empty" | Should -Exist
             (Get-ChildItem $to).Count | Should -Be 1
@@ -150,6 +159,34 @@ Describe 'Decompression function' -Tag 'Scoop', 'Decompress' {
         It "works with '-Removal' switch (`$removal param)" -Skip:$isUnix {
             $test | Should -Exist
             test_extract "Expand-ZipArchive" $test $true
+            $test | Should -Not -Exist
+        }
+    }
+
+
+
+    Context "zstd extraction" {
+
+        BeforeAll {
+            if($env:CI) {
+                mock Get-AppFilePath { (Get-Command zstd.exe).Path }
+            } elseif(!(installed zstd)) {
+                scoop install zstd
+            }
+
+            $test = "$working_dir\7ZipTest5.tar.zst"
+        }
+
+        It "extract normal compressed file" -Skip:$isUnix {
+            $to = test_extract "Expand-ZstdArchive" $test
+            $to | Should -Exist
+            "$to\empty" | Should -Exist
+            (Get-ChildItem $to).Count | Should -Be 1
+        }
+
+        It "works with '-Removal' switch (`$removal param)" -Skip:$isUnix {
+            $test | Should -Exist
+            test_extract "Expand-ZstdArchive" $test $true
             $test | Should -Not -Exist
         }
     }
