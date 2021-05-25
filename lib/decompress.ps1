@@ -20,6 +20,25 @@ function Test-7zipRequirement {
     }
 }
 
+function Test-ZstdRequirement {
+    [CmdletBinding(DefaultParameterSetName = "URL")]
+    [OutputType([Boolean])]
+    param (
+        [Parameter(Mandatory = $true, ParameterSetName = "URL")]
+        [String[]]
+        $URL,
+        [Parameter(Mandatory = $true, ParameterSetName = "File")]
+        [String]
+        $File
+    )
+    if ($URL) {
+        return ($URL | Where-Object { Test-ZstdRequirement -File $_ }).Count -gt 0
+    } else {
+        return $File -match '\.zst$'
+    }
+}
+
+
 function Test-LessmsiRequirement {
     [CmdletBinding()]
     [OutputType([Boolean])]
@@ -35,6 +54,63 @@ function Test-LessmsiRequirement {
     }
 }
 
+function Expand-ZstdArchive {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, Position = 0, ValueFromPipeline = $true)]
+        [String]
+        $Path,
+        [Parameter(Position = 1)]
+        [String]
+        $DestinationPath = (Split-Path $Path),
+        [String]
+        $ExtractDir,
+        [Parameter(ValueFromRemainingArguments = $true)]
+        [String]
+        $Switches,
+        [ValidateSet("All", "Skip", "Rename")]
+        [String]
+        $Overwrite,
+        [Switch]
+        $Removal
+    )
+
+    try {
+        $ZstdPath = (Get-Command 'zstd' -CommandType Application | Select-Object -First 1).Source
+    }
+    catch [System.Management.Automation.CommandNotFoundException] {
+        abort "Cannot find external Zstd (zstd.exe). Install Zstd (sccop install zstd) manually and try again."
+    }
+
+    $LogPath = "$(Split-Path $Path)\zstd.log"
+    $ArgList = @('-d', '-v',"`"$Path`"" )
+
+    if ($Switches) {
+        $ArgList += (-split $Switches)
+    }
+    switch ($Overwrite) {
+        "All" { $ArgList += "-f" }
+    }
+
+    try {
+        $Status = Invoke-ExternalCommand $ZstdPath $ArgList -LogPath $LogPath
+    } catch [System.Management.Automation.ParameterBindingException] {
+        Set-TerminatingError -Title 'Ignore|-''zstd'' is not installed or cannot be used'
+    }
+
+    if (!$Status) { abort "Failed to extract files from $Path.`nLog file:`n  $(friendly_path $LogPath)`n$(new_issue_msg $app $bucket 'decompress error')"  }
+
+    Expand-7zipArchive (strip_ext $Path) -DestinationPath $DestinationPath -ExtractDir $ExtractDir -Removal
+
+    if (Test-Path $LogPath) {
+        Remove-Item $LogPath -Force
+    }
+
+    if ($Removal) {
+        # Remove original archive file
+        Remove-Item $Path -Force
+    }
+}
 function Expand-7zipArchive {
     [CmdletBinding()]
     param (
@@ -79,6 +155,7 @@ function Expand-7zipArchive {
         "Rename" { $ArgList += "-aou" }
     }
     $Status = Invoke-ExternalCommand $7zPath $ArgList -LogPath $LogPath
+
     if (!$Status) {
         abort "Failed to extract files from $Path.`nLog file:`n  $(friendly_path $LogPath)`n$(new_issue_msg $app $bucket 'decompress error')"
     }
