@@ -86,8 +86,8 @@ if (!$apps) { exit 0 }
 
     uninstall_psmodule $manifest $refdir $global
 
-    env_rm_path $manifest $refdir $global
-    env_rm $manifest $global
+    env_rm_path $manifest $refdir $global $architecture
+    env_rm $manifest $global $architecture
 
     try {
         # unlink all potential old link before doing recursive Remove-Item

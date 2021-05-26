@@ -245,8 +245,8 @@ function update($app, $global, $quiet = $false, $independent, $suggested, $use_c
     write-host "Uninstalling '$app' ($old_version)"
     run_uninstaller $old_manifest $architecture $dir
     rm_shims $old_manifest $global $architecture
-    env_rm_path $old_manifest $dir $global
-    env_rm $old_manifest $global
+    env_rm_path $old_manifest $dir $global $architecture
+    env_rm $old_manifest $global $architecture
 
     # If a junction was used during install, that will have been used
     # as the reference directory. Otherwise it will just be the version

@@ -107,25 +107,26 @@ if($binaries) {
     }
     Write-Output $binary_output
 }
-
-if($manifest.env_set -or $manifest.env_add_path) {
+$env_set = (arch_specific 'env_set' $manifest $install.architecture)
+$env_add_path = (arch_specific 'env_add_path' $manifest $install.architecture)
+if($env_set -or $env_add_path) {
     if($status.installed) {
         Write-Output "Environment:"
     } else {
         Write-Output "Environment: (simulated)"
     }
 }
-if($manifest.env_set) {
-    $manifest.env_set | Get-Member -member noteproperty | ForEach-Object {
+if($env_set) {
+    $env_set | Get-Member -member noteproperty | ForEach-Object {
         $value = env $_.name $global
         if(!$value) {
-            $value = format $manifest.env_set.$($_.name) @{ "dir" = $dir }
+            $value = format $env_set.$($_.name) @{ "dir" = $dir }
         }
         Write-Output "  $($_.name)=$value"
     }
 }
-if($manifest.env_add_path) {
-    $manifest.env_add_path | Where-Object { $_ } | ForEach-Object {
+if($env_add_path) {
+    $env_add_path | Where-Object { $_ } | ForEach-Object {
         if($_ -eq '.') {
             Write-Output "  PATH=%PATH%;$dir"
         } else {

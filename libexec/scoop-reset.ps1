@@ -81,8 +81,8 @@ $apps | ForEach-Object {
     $dir = link_current $dir
     create_shims $manifest $dir $global $architecture
     create_startmenu_shortcuts $manifest $dir $global $architecture
-    env_add_path $manifest $dir
-    env_set $manifest $dir $global
+    env_add_path $manifest $dir $global $architecture
+    env_set $manifest $dir $global $architecture
     # unlink all potential old link before re-persisting
     unlink_persist_data $original_dir
     persist_data $manifest $original_dir $persist_dir

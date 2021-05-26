@@ -49,8 +49,8 @@ function do_uninstall($app, $global) {
     # directory.
     $refdir = unlink_current (appdir $app $global)
 
-    env_rm_path $manifest $refdir $global
-    env_rm $manifest $global
+    env_rm_path $manifest $refdir $global $architecture
+    env_rm $manifest $global $architecture
 
     $appdir = appdir $app $global
     try {
