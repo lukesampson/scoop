@@ -22,6 +22,10 @@ if ($env:CI_WINDOWS -eq $true) {
         Start-FileDownload 'https://raw.githubusercontent.com/ScoopInstaller/Binary/master/innounp/innounp048.rar' -FileName "$env:SCOOP_HELPERS\innounp.rar"
         & 7z.exe x "$env:SCOOP_HELPERS\innounp.rar" -o"$env:SCOOP_HELPERS\innounp" -y
     }
+    if(!(Test-Path "$env:SCOOP_HELPERS\innoextract\innoextract.exe")) {
+        Start-FileDownload 'https://github.com/dscharrer/innoextract/releases/download/1.9/innoextract-1.9-windows.zip' -FileName "$env:SCOOP_HELPERS\innoextract.rar"
+        & 7z.exe x "$env:SCOOP_HELPERS\innoextract.rar" -o"$env:SCOOP_HELPERS\innoextract" -y
+    }
 }
 
 if($env:CI -eq $true) {

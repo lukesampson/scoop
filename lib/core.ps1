@@ -243,7 +243,7 @@ function Get-HelperPath {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true, Position = 0, ValueFromPipeline = $true)]
-        [ValidateSet('7zip', 'Lessmsi', 'Innounp', 'Dark', 'Aria2')]
+        [ValidateSet('7zip', 'Lessmsi', 'Innounp', 'Dark', 'Aria2', 'Innoextract')]
         [String]
         $Helper
     )
@@ -258,6 +258,7 @@ function Get-HelperPath {
         }
         'Lessmsi' { $HelperPath = Get-AppFilePath 'lessmsi' 'lessmsi.exe' }
         'Innounp' { $HelperPath = Get-AppFilePath 'innounp' 'innounp.exe' }
+        'Innoextract' { $HelperPath = Get-AppFilePath 'innoextract' 'innoextract.exe' }
         'Dark' {
             $HelperPath = Get-AppFilePath 'dark' 'dark.exe'
             if([String]::IsNullOrEmpty($HelperPath)) {
@@ -274,7 +275,7 @@ function Test-HelperInstalled {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true, Position = 0, ValueFromPipeline = $true)]
-        [ValidateSet('7zip', 'Lessmsi', 'Innounp', 'Dark', 'Aria2')]
+        [ValidateSet('7zip', 'Lessmsi', 'Innounp', 'Dark', 'Aria2', 'Innoextract')]
         [String]
         $Helper
     )

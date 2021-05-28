@@ -12,6 +12,7 @@ environment:
   scoop_helpers: C:\projects\helpers
   lessmsi: '%scoop_helpers%\lessmsi\lessmsi.exe'
   innounp: '%scoop_helpers%\innounp\innounp.exe'
+  innoextract: '%scoop_helpers%\innoextract\innoextract.exe'
   matrix:
     - PowerShell: 5
     - PowerShell: 6

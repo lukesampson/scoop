@@ -65,7 +65,11 @@ function script_deps($script) {
         $deps += 'lessmsi'
     }
     if($script -like '*Expand-InnoArchive *' -or $script -like '*unpack_inno *') {
-        $deps += 'innounp'
+        if (get_config 'INNOSETUP_USE_INNOEXTRACT' $false) {
+            $deps += 'innounp'
+        } else {
+            $deps += 'innoextract'
+        }
     }
     if($script -like '*Expand-DarkArchive *') {
         $deps += 'dark'
@@ -83,8 +87,16 @@ function install_deps($manifest, $arch) {
     if (!(Test-HelperInstalled -Helper Lessmsi) -and (Test-LessmsiRequirement -URL (url $manifest $arch))) {
         $deps += 'lessmsi'
     }
-    if (!(Test-HelperInstalled -Helper Innounp) -and $manifest.innosetup) {
-        $deps += 'innounp'
+    if ($manifest.innosetup) {
+        if (get_config 'INNOSETUP_USE_INNOEXTRACT') {
+            if (!(Test-HelperInstalled -Helper innoextract)) {
+                $deps += 'innoextract'
+            }
+        } else {
+            if (!(Test-HelperInstalled -Helper Innounp)) {
+                $deps += 'innounp'
+            }   
+        }
     }
 
     $pre_install = arch_specific 'pre_install' $manifest $arch
