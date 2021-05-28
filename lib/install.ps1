@@ -1035,11 +1035,27 @@ function pre_install($manifest, $arch) {
     }
 }
 
+function pre_uninstall($manifest, $arch) {
+    $pre_uninstall = arch_specific 'pre_uninstall' $manifest $arch
+    if($pre_uninstall) {
+        write-output "Running pre-uninstall script..."
+        Invoke-Expression (@($pre_uninstall) -join "`r`n")
+    }
+}
+
 function post_install($manifest, $arch) {
     $post_install = arch_specific 'post_install' $manifest $arch
     if($post_install) {
         write-output "Running post-install script..."
         Invoke-Expression (@($post_install) -join "`r`n")
+    }
+}
+
+function post_uninstall($manifest, $arch) {
+    $post_uninstall = arch_specific 'post_uninstall' $manifest $arch
+    if($post_uninstall) {
+        write-output "Running post-uninstall script..."
+        Invoke-Expression (@($post_uninstall) -join "`r`n")
     }
 }
 

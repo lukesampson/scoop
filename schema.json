@@ -117,7 +117,13 @@
                 "post_install": {
                     "$ref": "#/definitions/stringOrArrayOfStrings"
                 },
+                "post_uninstall": {
+                    "$ref": "#/definitions/stringOrArrayOfStrings"
+                },
                 "pre_install": {
+                    "$ref": "#/definitions/stringOrArrayOfStrings"
+                },
+                "pre_uninstall": {
                     "$ref": "#/definitions/stringOrArrayOfStrings"
                 },
                 "shortcuts": {
@@ -498,7 +504,13 @@
         "post_install": {
             "$ref": "#/definitions/stringOrArrayOfStrings"
         },
+        "post_uninstall": {
+            "$ref": "#/definitions/stringOrArrayOfStrings"
+        },
         "pre_install": {
+            "$ref": "#/definitions/stringOrArrayOfStrings"
+        },
+        "pre_uninstall": {
             "$ref": "#/definitions/stringOrArrayOfStrings"
         },
         "psmodule": {
