@@ -4,7 +4,13 @@
 #
 # If used with [query], shows app names that match the query.
 # Without [query], shows all the available apps.
-param($query)
+# Option:
+#   -d, --description   Search in the manifest description as well
+param(
+  [String]$query,
+  [Switch]$description = $false
+)
+
 . "$psscriptroot\..\lib\core.ps1"
 . "$psscriptroot\..\lib\buckets.ps1"
 . "$psscriptroot\..\lib\manifest.ps1"
@@ -21,6 +27,12 @@ function bin_match($manifest, $query) {
         if((strip_ext $fname) -match $query) { return $fname }
         if($alias -match $query) { return $alias }
     }
+    $false
+}
+
+function description_match($manifest, $query) {
+    if(!$manifest.description) { return $false }
+    if($manifest.description -match $query) { return $manifest.description }
     $false
 }
 
@@ -41,6 +53,12 @@ function search_bucket($bucket, $query) {
             $bin = bin_match (manifest $_.name $bucket) $query
             if($bin) {
                 $_.bin = $bin; return $true;
+            }
+            if ($description) {
+                $desc = description_match (manifest $_.name $bucket) $query
+                if($desc) {
+                    $_.desc = $desc; return $true;
+                }
             }
         }
     }
@@ -106,6 +124,7 @@ Get-LocalBucket | ForEach-Object {
         $res | ForEach-Object {
             $item = "    $($_.name) ($($_.version))"
             if($_.bin) { $item += " --> includes '$($_.bin)'" }
+            if($_.desc) { $item += " --> description '$($_.desc)'" }
             $item
         }
         ""
