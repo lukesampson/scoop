@@ -58,16 +58,16 @@ function script_deps($script) {
         return $deps
     }
 
-    if($script -like '*Expand-7zipArchive *' -or $script -like '*extract_7zip *') {
+    if (!(Test-HelperInstalled -Helper 7zip) -and ($script -like '*Expand-7zipArchive *' -or $script -like '*extract_7zip *')) {
         $deps += '7zip'
     }
-    if($script -like '*Expand-MsiArchive *' -or $script -like '*extract_msi *') {
+    if (!(Test-HelperInstalled -Helper Lessmsi) -and ($script -like '*Expand-MsiArchive *' -or $script -like '*extract_msi *')) {
         $deps += 'lessmsi'
     }
-    if($script -like '*Expand-InnoArchive *' -or $script -like '*unpack_inno *') {
+    if (!(Test-HelperInstalled -Helper Innounp) -and ($script -like '*Expand-InnoArchive *' -or $script -like '*unpack_inno *')) {
         $deps += 'innounp'
     }
-    if($script -like '*Expand-DarkArchive *') {
+    if (!(Test-HelperInstalled -Helper Dark) -and $script -like '*Expand-DarkArchive *') {
         $deps += 'dark'
     }
 
