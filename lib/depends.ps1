@@ -61,6 +61,9 @@ function script_deps($script) {
     if($script -like '*Expand-7zipArchive *' -or $script -like '*extract_7zip *') {
         $deps += '7zip'
     }
+    if($script -like '*Expand-ZstdArchive *') {
+        $deps += 'zstd'
+    }
     if($script -like '*Expand-MsiArchive *' -or $script -like '*extract_msi *') {
         $deps += 'lessmsi'
     }
@@ -85,6 +88,9 @@ function install_deps($manifest, $arch) {
     }
     if (!(Test-HelperInstalled -Helper Innounp) -and $manifest.innosetup) {
         $deps += 'innounp'
+    }
+    if (!(Test-HelperInstalled -Helper Zstd) -and (Test-ZstdRequirement -URL (url $manifest $arch))) {
+        $deps += 'zstd'
     }
 
     $pre_install = arch_specific 'pre_install' $manifest $arch

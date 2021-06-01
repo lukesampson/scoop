@@ -20,6 +20,24 @@ function Test-7zipRequirement {
     }
 }
 
+function Test-ZstdRequirement {
+    [CmdletBinding(DefaultParameterSetName = "URL")]
+    [OutputType([Boolean])]
+    param (
+        [Parameter(Mandatory = $true, ParameterSetName = "URL")]
+        [String[]]
+        $URL,
+        [Parameter(Mandatory = $true, ParameterSetName = "File")]
+        [String]
+        $File
+    )
+    if ($URL) {
+        return ($URL | Where-Object { Test-ZstdRequirement -File $_ }).Count -gt 0
+    } else {
+        return $File -match '\.zst$'
+    }
+}
+
 function Test-LessmsiRequirement {
     [CmdletBinding()]
     [OutputType([Boolean])]
@@ -97,6 +115,45 @@ function Expand-7zipArchive {
         } else {
             abort "Failed to list files in $Path.`nNot a 7-Zip supported archive file."
         }
+    }
+    if ($Removal) {
+        # Remove original archive file
+        Remove-Item $Path -Force
+    }
+}
+
+function Expand-ZstdArchive {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, Position = 0, ValueFromPipeline = $true)]
+        [String]
+        $Path,
+        [Parameter(Position = 1)]
+        [String]
+        $DestinationPath = (Split-Path $Path),
+        [String]
+        $ExtractDir,
+        [Parameter(ValueFromRemainingArguments = $true)]
+        [String]
+        $Switches,
+        [ValidateSet("All")]
+        [String]
+        $Overwrite,
+        [Switch]
+        $Removal
+    )
+    $ZstdPath = Get-HelperPath -Helper Zstd
+    $LogPath = "$(Split-Path $Path)\zstd.log"
+    $ArgList = @('-d', '-f', "`"$Path`"")
+    $Status = Invoke-ExternalCommand $ZstdPath $ArgList -LogPath $LogPath
+    if (!$Status) {
+        abort "Failed to extract files from $Path. `n$(new_issue_msg $app $bucket 'decompress error')"
+    }
+    $ZstdExtractPath = (strip_ext $Path) # default extract location for zstd (just remove zst extension)
+    $DecompressedFileName = (Split-Path $ZstdExtractPath -Leaf)
+    $IsTar = ($ZstdExtractPath -match '\.tar$')
+    if ($IsTar) {
+        Expand-7zipArchive $ZstdExtractPath -DestinationPath $DestinationPath -ExtractDir $ExtractDir -Removal
     }
     if ($Removal) {
         # Remove original archive file
