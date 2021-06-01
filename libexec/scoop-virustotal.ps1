@@ -9,9 +9,10 @@
 # them in many cases.  If the hash is unknown to VirusTotal, the
 # download link is printed to submit it to VirusTotal.
 #
-# If you have signed up to VirusTotal's community, you have an API key
-# that this script can use to submit unknown packages for inspection
-# if you use the `--scan' flag.  Tell scoop about your API key with:
+# To use this scoop sub-command, you need a VirusTotal API key.
+# Without it, the sub-command will likely only be able to list URLs to
+# view the virus scan results manually in your browser.  Please sign
+# up to VirusTotal's community and tell scoop about your API key with:
 #
 #   scoop config virustotal_api_key <your API key: 64 lower case hex digits>
 #
@@ -23,6 +24,7 @@
 # 8 -> at least one package couldn't be queried because its hash type
 #      isn't supported by VirusTotal, the manifest couldn't be found
 #      or didn't contain a hash
+#
 # Note: the exit codes (2, 4 & 8) may be combined, e.g. 6 -> exit codes
 #       2 & 4 combined
 #
@@ -68,10 +70,14 @@ $_ERR_UNSAFE = 2
 $_ERR_EXCEPTION = 4
 $_ERR_NO_INFO = 8
 
-$exit_code = 0
+# Global API key to fetch it only once
+$_API_KEY = get_config('virustotal_api_key')
+if (!$_API_KEY) {
+    warn "No VirusTotal API key found: feature will be degraded or unavailable.  " +
+         "Set it up with`n`tscoop config virustotal_api_key <API key>"
+}
 
-# Global flag to warn only once about missing API key:
-$warned_no_api_key = $False
+$exit_code = 0
 
 # Global flag to explain only once about sleep between requests
 $explained_rate_limit_sleeping = $False
@@ -82,16 +88,42 @@ $requests = 0
 
 Function Get-VirusTotalResult($hash, $app) {
     $hash = $hash.ToLower()
-    $url = "https://www.virustotal.com/ui/files/$hash"
+    $API_URL = "https://www.virustotal.com/api/v3/search?query=$hash"
+    $UI_URL = "https://www.virustotal.com/ui/files/$hash"
+    $see_url = "see https://www.virustotal.com/#/file/$hash/detection"
     $wc = New-Object Net.Webclient
     $wc.Headers.Add('User-Agent', (Get-UserAgent))
-    $result = $wc.downloadstring($url)
-    $stats = json_path $result '$.data.attributes.last_analysis_stats'
+    if ($_API_KEY) {
+        $wc.Headers.Add('x-apikey', $_API_KEY)
+        $url = $API_URL
+        $stats_json_path = '$.data[0].attributes.last_analysis_stats'
+    } else {
+        $url = $UI_URL
+        $stats_json_path = '$.data.attributes.last_analysis_stats'
+    }
+    try {
+        $result = $wc.downloadstring($url)
+    } catch {
+        error "querying VirusTotal for $app`: $_`n    $see_url"
+        return $_ERR_EXCEPTION
+    }
+    if ($url -eq $API_URL) {
+        $error_message = json_path $result '$.error.message'
+        $error_code = json_path $result '$.error.code'
+        if ($error_code) {
+            throw "$error_message ($error_code)"
+        }
+    }
+    $stats = json_path $result $stats_json_path
+    if ($null -eq $stats) {
+        # Make sure to include '(404)' in the exception as this is the trigger
+        # for the exception handler to attempt submitting the file for analysis
+        throw "No data found (404) for $app with hash $hash"
+    }
     $malicious = json_path $stats '$.malicious'
     $suspicious = json_path $stats '$.suspicious'
     $undetected = json_path $stats '$.undetected'
     $unsafe = [int]$malicious + [int]$suspicious
-    $see_url = "see https://www.virustotal.com/#/file/$hash/detection"
     switch ($unsafe) {
         0 { if ($undetected -eq 0) { $fg = "Yellow" } else { $fg = "DarkGreen" } }
         1 { $fg = "DarkYellow" }
@@ -153,14 +185,7 @@ Function Submit-RedirectedUrl {
 #              exceeded, without risking an infinite loop (as stack
 #              overflow) if the submission keeps failing.
 Function Submit-ToVirusTotal ($url, $app, $do_scan, $retrying=$False) {
-    $api_key = get_config("virustotal_api_key")
-    if ($do_scan -and !$api_key -and !$warned_no_api_key) {
-        $warned_no_api_key = $true
-        info "Submitting unknown apps needs a VirusTotal API key.  " +
-             "Set it up with`n`tscoop config virustotal_api_key <API key>"
-
-    }
-    if (!$do_scan -or !$api_key) {
+    if (!$do_scan -or !$_API_KEY) {
         warn "$app`: not found`: manually submit $url"
         return
     }
@@ -175,7 +200,7 @@ Function Submit-ToVirusTotal ($url, $app, $do_scan, $retrying=$False) {
             $new_redir = Submit-RedirectedUrl $orig_redir
         } while ($orig_redir -ne $new_redir)
         $requests += 1
-        $result = Invoke-WebRequest -Uri "https://www.virustotal.com/vtapi/v2/url/scan" -Body @{apikey=$api_key;url=$new_redir} -Method Post -UseBasicParsing
+        $result = Invoke-WebRequest -Uri "https://www.virustotal.com/vtapi/v2/url/scan" -Body @{apikey=$_API_KEY;url=$new_redir} -Method Post -UseBasicParsing
         $submitted = $result.StatusCode -eq 200
         if ($submitted) {
             warn "$app`: not found`: submitted $url"
