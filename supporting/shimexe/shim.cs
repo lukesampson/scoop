@@ -1,13 +1,13 @@
 using System;
-using System.ComponentModel;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using System.Runtime.InteropServices;
 
 namespace Scoop {
 
@@ -90,6 +90,12 @@ namespace Scoop {
             }
             if(!string.IsNullOrEmpty(cmd_args)) cmd_args = " " + cmd_args;
             var cmd = "\"" + path + "\"" + cmd_args;
+
+            foreach (KeyValuePair<string, string> entry in config) {
+                if (entry.Key.StartsWith("env::")) {
+                    Environment.SetEnvironmentVariable(entry.Key.Substring(5), Environment.ExpandEnvironmentVariables(entry.Value));
+                }
+            }
 
             if(!CreateProcess(null, cmd, IntPtr.Zero, IntPtr.Zero,
                 bInheritHandles: true,
