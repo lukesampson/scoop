@@ -205,7 +205,7 @@ function dl_with_cache_aria2($app, $version, $manifest, $architecture, $dir, $co
     # aria2 input file
     $urlstxt = Join-Path $cachedir "$app.txt"
     $urlstxt_content = ''
-    $has_downloads = $false
+    $download_finished = $false
 
     # aria2 options
     $options = @(
@@ -258,8 +258,7 @@ function dl_with_cache_aria2($app, $version, $manifest, $architecture, $dir, $co
             'source' = fullpath (cache_path $app $version $url)
         }
 
-        if(!(test-path $data.$url.source)) {
-            $has_downloads = $true
+        if(-not(test-path $data.$url.source)) {
             # create aria2 input file content
             $urlstxt_content += "$(handle_special_urls $url)`n"
             if(!$url.Contains('sourceforge.net')) {
@@ -267,16 +266,21 @@ function dl_with_cache_aria2($app, $version, $manifest, $architecture, $dir, $co
             }
             $urlstxt_content += "    dir=$cachedir`n"
             $urlstxt_content += "    out=$($data.$url.cachename)`n"
-        } else {
+        } elseif(-not((test-path $($data.$url.source + '.aria2')) -or
+                      (test-path $urlstxt))) {
+
+            $download_finished = $true
             Write-Host "Loading " -NoNewline
             Write-Host $(url_remote_filename $url) -f Cyan -NoNewline
             Write-Host " from cache."
         }
     }
 
-    if($has_downloads) {
+    if(-not($download_finished)) {
         # write aria2 input file
-        Set-Content -Path $urlstxt $urlstxt_content
+        if($null -ne $urlstxt_content) {
+            Set-Content -Path $urlstxt $urlstxt_content
+        }
 
         # build aria2 command
         $aria2 = "& '$(Get-HelperPath -Helper Aria2)' $($options -join ' ')"
