@@ -81,6 +81,10 @@ namespace Scoop {
             var si = new STARTUPINFO();
             var pi = new PROCESS_INFORMATION();
 
+            if (!System.IO.Path.IsPathRooted(path)) {
+                path = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), path);
+            }
+
             // create command line
             var cmd_args = add_args ?? "";
             var pass_args = GetArgs(Environment.CommandLine);
