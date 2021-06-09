@@ -14,6 +14,7 @@ function url_manifest($url) {
     $str = $null
     try {
         $wc = New-Object Net.Webclient
+        $wc.Encoding = [System.Text.Encoding]::UTF8
         $wc.Headers.Add('User-Agent', (Get-UserAgent))
         $str = $wc.downloadstring($url)
     } catch [system.management.automation.methodinvocationexception] {
