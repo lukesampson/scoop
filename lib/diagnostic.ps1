@@ -43,8 +43,8 @@ function check_long_paths {
     if (!$key -or ($key.LongPathsEnabled -eq 0)) {
         warn 'LongPaths support is not enabled.'
         Write-Host "You can enable it with running:"
-        Write-Host "    Set-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem' -Name 'LongPathsEnabled' -Value 1"
-
+        Write-Host "    sudo Set-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem' -Name 'LongPathsEnabled' -Value 1"
+        Write-Host "  (Requires 'sudo' command. Run 'scoop install sudo' if you don't have it.)"
         return $false
     }
 
