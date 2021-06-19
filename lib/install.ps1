@@ -9,6 +9,10 @@ function nightly_version($date, $quiet = $false) {
     "nightly-$date_str"
 }
 
+function Test-ManifestReviewEnabled {
+    return get_config 'manifest-review' $false
+}
+
 function install_app($app, $architecture, $global, $suggested, $use_cache = $true, $check_hash = $true) {
     $app, $bucket, $null = parse_app $app
     $app, $manifest, $bucket, $url = Find-Manifest $app $bucket
@@ -35,6 +39,19 @@ function install_app($app, $architecture, $global, $suggested, $use_cache = $tru
     }
 
     write-output "Installing '$app' ($version) [$architecture]"
+    
+    if (Test-ManifestReviewEnabled) {
+        $show_manifest = read-host -Prompt "Show manifest? [y/N]"
+        if ($show_manifest -eq "y") {
+            write-output "manifest:"
+            write-output $manifest | ConvertToPrettyJson
+            $answer = read-host -Prompt "Continue installation? [Y/n]"
+
+            if ($answer -eq "n") {
+                return
+            }
+        }
+    }
 
     $dir = ensure (versiondir $app $version $global)
     $original_dir = $dir # keep reference to real (not linked) directory
