@@ -67,6 +67,14 @@ $apps | ForEach-Object {
     $original_dir = $dir
     $persist_dir = persistdir $app $global
 
+    #region Workaround for #2952
+    $processdir = $dir | Select-Object -ExpandProperty Path
+    if (Get-Process | Where-Object { $_.Path -like "$processdir\*" }) {
+        error "Application is still running. Close all instances and try again."
+        continue
+    }
+    #endregion Workaround for #2952
+
     $install = install_info $app $version $global
     $architecture = $install.architecture
 
