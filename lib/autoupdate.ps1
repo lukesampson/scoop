@@ -89,7 +89,36 @@ function find_hash_in_textfile([String] $url, [Hashtable] $substitutions, [Strin
     return format_hash $hash
 }
 
-function find_hash_in_json([String] $url, [Hashtable] $substitutions, [String] $jsonpath) {
+function find_hash_in_string([String] $text, [Hashtable] $substitutions, [String] $regex) {
+    $templates = @{
+        '$md5'      = '([a-fA-F0-9]{32})';
+        '$sha1'     = '([a-fA-F0-9]{40})';
+        '$sha256'   = '([a-fA-F0-9]{64})';
+        '$sha512'   = '([a-fA-F0-9]{128})';
+        '$checksum' = '([a-fA-F0-9]{32,128})';
+        '$base64'   = '([a-zA-Z0-9+\/=]{24,88})';
+    }
+    $regex = substitute $regex $templates $false
+    $regex = substitute $regex $substitutions $true
+    debug $regex
+    $regex = New-Object System.Text.RegularExpressions.Regex($regex)
+    $match = $regex.Matches($page) | Select-Object -First 1
+    if ($match -and $match.Success) {
+        $matchesHashtable = @{}
+        $regex.GetGroupNames() | ForEach-Object { $matchesHashtable.Add($_, $match.Groups[$_].Value) }
+        $hash = $matchesHashtable['1']
+        if ($hash) {
+            return format_hash $hash
+        } else {
+            return $null
+        }
+    } else {
+        write-host -f darkred "couldn't match '$regexp' in $text"
+        return $null
+    }
+}
+
+function find_hash_in_json([String] $url, [Hashtable] $substitutions, [String] $jsonpath, [String] $regex = "") {
     $json = $null
 
     try {
@@ -103,10 +132,14 @@ function find_hash_in_json([String] $url, [Hashtable] $substitutions, [String] $
         return
     }
     $hash = json_path $json $jsonpath $substitutions
-    if(!$hash) {
+    if (!$hash) {
         $hash = json_path_legacy $json $jsonpath $substitutions
     }
-    return format_hash $hash
+    if ($regex) {
+        return find_hash_in_string $hash $substitutions $regex
+    } else {
+        return format_hash $hash
+    }
 }
 
 function find_hash_in_xml([String] $url, [Hashtable] $substitutions, [String] $xpath) {
