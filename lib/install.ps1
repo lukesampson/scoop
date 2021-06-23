@@ -362,6 +362,10 @@ function dl_with_cache_aria2($app, $version, $manifest, $architecture, $dir, $co
 
 # download with filesize and progress indicator
 function dl($url, $to, $cookies, $progress) {
+    if ($url.ToString().ToLower().StartsWith('https://github.com/')) {
+        $url = "https://ghproxy.com/$url"
+        Write-Host "Found github url, replace it to mirror: $url"
+    }
     $reqUrl = ($url -split "#")[0]
     $wreq = [net.webrequest]::create($reqUrl)
     if($wreq -is [net.httpwebrequest]) {
