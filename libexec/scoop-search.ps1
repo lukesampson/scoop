@@ -4,11 +4,23 @@
 #
 # If used with [query], shows app names that match the query.
 # Without [query], shows all the available apps.
-param($query)
+# Options:
+#   -v, --verbose   Show extended application info
+#   -k, --known     Search also by all known buckets
+
+param(
+  [String]$query,
+  [Switch]$verbose = $false,
+  [Switch]$known = $false
+)
+
 . "$psscriptroot\..\lib\core.ps1"
 . "$psscriptroot\..\lib\buckets.ps1"
 . "$psscriptroot\..\lib\manifest.ps1"
 . "$psscriptroot\..\lib\versions.ps1"
+. "$psscriptroot\..\lib\depends.ps1"
+. "$psscriptroot\..\lib\help.ps1"
+. "$psscriptroot\..\lib\install.ps1"
 
 reset_aliases
 
@@ -107,12 +119,18 @@ Get-LocalBucket | ForEach-Object {
             $item = "    $($_.name) ($($_.version))"
             if($_.bin) { $item += " --> includes '$($_.bin)'" }
             $item
+            if($verbose) {
+                $info = Invoke-Expression "& `"$psscriptroot\scoop-info.ps1`" $($_.name)"
+                foreach ( $line in $info.Split("`n") ) {
+                    Write-Output "      $line"
+                }
+            }
         }
         ""
     }
 }
 
-if (!$local_results -and !(github_ratelimit_reached)) {
+if (!(github_ratelimit_reached) -and (!$local_results -or $known)) {
     $remote_results = search_remotes $query
     if(!$remote_results) { [console]::error.writeline("No matches found."); exit 1 }
     $remote_results
