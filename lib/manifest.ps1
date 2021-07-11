@@ -45,7 +45,7 @@ function installed_manifest($app, $version, $global) {
 }
 
 function save_install_info($info, $dir) {
-    $nulls = $info.keys | Where-Object { $null -eq $info[$_] }
+    $nulls = $info.entrys | Where-Object { $null -eq $info[$_] }
     $nulls | ForEach-Object { $info.remove($_) } # strip null-valued
 
     $file_content = $info | ConvertToPrettyJson
@@ -111,7 +111,57 @@ function generate_user_manifest($app, $bucket, $version) {
     return $null
 }
 
-function url($manifest, $arch) { arch_specific 'url' $manifest $arch }
+function url($manifest, $arch) {
+    $url = arch_specific 'url' $manifest $arch
+    $mirrors = get_config 'mirrors'
+    $mirrors = $mirrors | ConvertPSObjectToHashtable
+    if ($null -ne $mirrors) {
+        $entrys = $mirrors.GetEnumerator()
+        foreach ($mirror in $entrys) {
+            $url = $url -replace ($mirror.Key, $mirror.Value)
+        }
+    }
+    $url
+}
+function ConvertPSObjectToHashtable
+{
+    #  Code reference
+    # https://stackoverflow.com/questions/3740128/pscustomobject-to-hashtable/34383413#34383413
+    param (
+        [Parameter(ValueFromPipeline)]
+        $InputObject
+    )
+
+    process
+    {
+        if ($null -eq $InputObject) { return $null }
+
+        if ($InputObject -is [System.Collections.IEnumerable] -and $InputObject -isnot [string])
+        {
+            $collection = @(
+                foreach ($object in $InputObject) { ConvertPSObjectToHashtable $object }
+            )
+
+            Write-Output -NoEnumerate $collection
+        }
+        elseif ($InputObject -is [psobject])
+        {
+            $hash = @{}
+
+            foreach ($property in $InputObject.PSObject.Properties)
+            {
+                $hash[$property.Name] = ConvertPSObjectToHashtable $property.Value
+            }
+
+            $hash
+        }
+        else
+        {
+            $InputObject
+        }
+    }
+}
+
 function installer($manifest, $arch) { arch_specific 'installer' $manifest $arch }
 function uninstaller($manifest, $arch) { arch_specific 'uninstaller' $manifest $arch }
 function msi($manifest, $arch) { arch_specific 'msi' $manifest $arch }
